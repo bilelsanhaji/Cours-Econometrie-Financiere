@@ -1,0 +1,113 @@
+---
+title: "Économétrie Financière"
+author: "Fiche TP #4"
+subtitle: "Estimation d'un DCC-GARCH sur un petit portefeuille"
+format: pdf
+---
+
+*S'appuie sur le chapitre 4 (`01-Slides/CM4-mgarch.qmd`) et réutilise
+directement les acquis du TP3 (spécification GARCH univariée). Dernière
+étape du projet : la partie "portefeuille".*
+
+---
+
+# Avant de commencer
+
+**Langage.** `R`. Le corrigé est dans
+`03-TP/corriges/TP4-mgarch-R-corrige.qmd`.
+
+**Packages clés.** `rmgarch` (`dccspec`, `dccfit`, `dccforecast`),
+`rugarch` (spécifications univariées en entrée du DCC).
+
+**Données.** Rendements journaliers de 3 à 4 actifs (par exemple :
+CAC40, DAX, S&P500, ou un panier d'actions de secteurs différents), sur
+une période commune d'au moins 5 ans.
+
+---
+
+# Exercice 1 — Constituer et décrire le portefeuille
+
+(a) Téléchargez les prix de clôture ajustés de vos actifs sur une
+    période commune, calculez les log-rendements journaliers (%).
+(b) Alignez les séries (dates communes, valeurs manquantes supprimées).
+(c) Calculez la matrice de corrélation **non conditionnelle**
+    (`cor`) des rendements. Ces corrélations vous semblent-elles
+    stables dans le temps (comparez sur deux sous-périodes, par exemple
+    avant/pendant une crise) ?
+
+---
+
+# Exercice 2 — Spécifier les GARCH univariés (étape 1)
+
+(a) Pour chaque actif, spécifiez un GARCH(1,1) univarié avec `rugarch::ugarchspec`
+    (comme au TP3).
+(b) Rassemblez les spécifications avec `rugarch::multispec`.
+(c) Rappelez, en une phrase, pourquoi cette étape correspond exactement
+    à l'étape 1 de l'estimation en deux étapes vue en cours et au TD4.
+
+---
+
+# Exercice 3 — Spécifier et estimer le DCC (étape 2)
+
+(a) Construisez la spécification DCC avec `rmgarch::dccspec` (argument
+    `uspec = multispec(...)`, `dccOrder = c(1,1)`, `distribution =
+    "mvnorm"`).
+(b) Estimez le modèle avec `rmgarch::dccfit`.
+(c) Extrayez $\widehat\theta_1$ et $\widehat\theta_2$ (`rshape`/`rcor`
+    selon la version du package, ou `coef(fit)`). Calculez
+    $\widehat\theta_1+\widehat\theta_2$ : le modèle est-il proche d'un
+    CCC (persistance faible) ou d'une forte inertie des corrélations ?
+
+---
+
+# Exercice 4 — Extraire et visualiser les corrélations dynamiques
+
+(a) Extrayez la série des corrélations conditionnelles estimées
+    (`rcor(fit)`) pour chaque paire d'actifs.
+(b) Tracez la corrélation conditionnelle entre deux actifs de votre
+    choix au cours du temps. Est-elle stable, ou varie-t-elle
+    nettement ?
+(c) Comparez la valeur de la corrélation conditionnelle pendant une
+    période de crise à sa valeur en période calme (cf. exercice 1(c)).
+    Est-ce cohérent avec l'ADCC (corrélations qui augmentent en période
+    de baisse conjointe) évoqué en cours, même si vous n'estimez qu'un
+    DCC symétrique ici ?
+
+---
+
+# Exercice 5 — Tester CCC contre DCC
+
+(a) Estimez, en complément, un modèle CCC (`rmgarch::cccspec` /
+    `cccfit`, ou DCC avec `dccOrder = c(0,0)` selon la version du
+    package).
+(b) Comparez les log-vraisemblances des deux modèles (CCC vs DCC). Le
+    DCC apporte-t-il un gain significatif ?
+(c) Reliez ce résultat au test emboîté $H_0:\theta_1=\theta_2=0$ vu au
+    TD4 (exercice 4).
+
+---
+
+# Exercice 6 — Application : volatilité et corrélation d'un portefeuille
+
+(a) Pour un portefeuille équipondéré de vos actifs, calculez la
+    variance conditionnelle du portefeuille à chaque date à partir de
+    $\mathbf H_t$ estimée :
+    $\sigma_{p,t}^2 = \mathbf w'\mathbf H_t\mathbf w$, avec $\mathbf w$
+    le vecteur de pondérations.
+(b) Tracez la volatilité du portefeuille ainsi obtenue. Comparez-la à
+    la moyenne (simple) des volatilités individuelles des actifs : le
+    DCC capture-t-il un effet de diversification visible ?
+(c) Reprenez le calcul de VaR du TP3 (exercice 6), mais appliqué au
+    portefeuille plutôt qu'à un actif unique :
+    $\text{VaR}_{p,t+1}(5\%) = \widehat\mu_{p,t+1} + z_{5\%}\,\widehat\sigma_{p,t+1}$.
+(d) Comptez les violations ($r_{p,t}<\text{VaR}_{p,t}$) sur votre
+    échantillon et testez la calibration par le test de Kupiec vu en
+    cours (chapitre 4) et au TD4 (exercice 6). Comparez à ce que vous
+    aviez trouvé au TP3 pour un actif unique.
+
+::: {.notes}
+Cet exercice conclut la partie "modélisation" du projet : moyenne
+(ARMA, chapitre 2) $\to$ variance univariée (GARCH, chapitre 3)
+$\to$ covariance/corrélation multivariée (DCC, ce chapitre) sur le
+portefeuille retenu, jusqu'au backtesting de la VaR qui boucle le cours.
+:::

@@ -1,0 +1,268 @@
+/*-----------------------------------------------------------------------------
+  Thème — Économétrie Financière, M2 (Paris 8 MBFA / UPEC MASERATI)
+  Palette : bleu de Klein · bleu de Prusse · argent · or
+  Principe : fond blanc dominant, couleurs en accent uniquement.
+
+  Identique au thème du cours de Séries Temporelles (M1 MBFA) et du M2
+  Crypto-Fintech : tous les cours partagent la même identité visuelle. Toute
+  retouche ici gagne à être reportée là-bas.
+-----------------------------------------------------------------------------*/
+
+/*-- scss:defaults --*/
+
+// ---- Palette --------------------------------------------------------------
+$klein:        #002FA7;   // bleu de Klein (IKB) — accent principal
+$klein-clair:  #3358C4;   // Klein éclairci, pour les liens survolés
+$klein-voile:  #EEF1FB;   // voile de Klein, fonds d'encadré
+$prusse:       #003153;   // bleu de Prusse — titres, texte structurant
+$prusse-clair: #1B4B70;
+$prusse-voile: #EDF1F4;
+$or:           #C9A227;   // or — alerte, contre-intuitif
+$or-clair:     #D4AF37;
+$or-voile:     #FBF6E7;
+$argent:       #B7BEC6;   // argent — filets, bordures
+$argent-clair: #E4E7EB;
+$argent-fonce: #6E7883;   // texte secondaire
+
+$blanc:        #FFFFFF;
+$encre:        #16222E;   // presque noir, teinté Prusse
+
+// ---- Typographie ----------------------------------------------------------
+$font-family-sans-serif: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif !default;
+$presentation-font-size-root: 30px;
+$presentation-line-height: 1.35;
+
+$body-bg: $blanc;
+$body-color: $encre;
+
+$link-color: $klein;
+$link-color-hover: $klein-clair;
+
+$presentation-heading-color: $prusse;
+$presentation-heading-font-weight: 600;
+$presentation-h1-font-size: 1.85em;
+$presentation-h2-font-size: 1.30em;
+$presentation-h3-font-size: 1.02em;
+
+$code-block-font-size: 0.60em;
+$code-color: $prusse;
+
+$selection-bg: rgba(0, 47, 167, .18);
+
+/*-- scss:rules --*/
+
+// Variables CSS, réutilisées par les schémas SVG des slides
+:root {
+  --klein:        #002FA7;
+  --klein-clair:  #3358C4;
+  --klein-voile:  #EEF1FB;
+  --prusse:       #003153;
+  --prusse-clair: #1B4B70;
+  --prusse-voile: #EDF1F4;
+  --or:           #C9A227;
+  --or-clair:     #D4AF37;
+  --or-voile:     #FBF6E7;
+  --argent:       #B7BEC6;
+  --argent-clair: #E4E7EB;
+  --argent-fonce: #6E7883;
+  --encre:        #16222E;
+}
+
+.reveal { letter-spacing: .002em; }
+.reveal .slide-background { background-color: #FFFFFF; }
+
+// ---- Titres ---------------------------------------------------------------
+.reveal h2 {
+  border-bottom: 1px solid $argent;
+  padding-bottom: .20em;
+  margin-bottom: .55em;
+  letter-spacing: -.008em;
+}
+
+// filet doré discret sous le trait d'argent
+.reveal h2::after {
+  content: "";
+  display: block;
+  width: 2.2em;
+  height: 2px;
+  background: $or;
+  margin-top: .20em;
+  margin-bottom: -.22em;
+}
+
+.reveal h3 {
+  color: $prusse-clair;
+  text-transform: none;
+  font-weight: 600;
+}
+
+// Slides de section : fond blanc, titre Prusse, double filet Klein / or
+.reveal .slide.level1 h1,
+.reveal section.level1 h1 {
+  color: $prusse;
+  font-size: 1.65em;
+  letter-spacing: -.012em;
+  text-align: left;
+  padding-bottom: .22em;
+  border-bottom: 3px solid $klein;
+  position: relative;
+}
+.reveal .slide.level1 h1::after,
+.reveal section.level1 h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -7px;
+  width: 3.4em;
+  height: 3px;
+  background: $or;
+}
+.reveal .title-slide h1,
+.reveal .title-slide h2 { color: inherit; border: 0; }
+.reveal .title-slide h1::after { display: none; }
+
+// ---- Texte ----------------------------------------------------------------
+.reveal strong { color: $prusse; font-weight: 700; }
+.reveal em { color: $prusse-clair; }
+
+.reveal a { text-decoration: none; border-bottom: 1px solid rgba(0, 47, 167, .35); }
+.reveal a:hover { border-bottom-color: $klein; }
+
+.reveal ul li::marker { color: $klein; }
+.reveal ol li::marker { color: $klein; font-weight: 600; }
+
+// ---- Tableaux -------------------------------------------------------------
+.reveal table {
+  font-size: .76em;
+  border-collapse: collapse;
+  margin: .4em auto;
+}
+.reveal table th {
+  background: $prusse-voile;
+  color: $prusse;
+  font-weight: 600;
+  border-bottom: 2px solid $prusse;
+  text-align: left;
+}
+.reveal table td { border-bottom: 1px solid $argent-clair; }
+.reveal table td, .reveal table th { padding: .26em .62em; }
+.reveal table tbody tr:last-child td { border-bottom: 1px solid $argent; }
+
+// ---- Encadrés -------------------------------------------------------------
+%encadre {
+  padding: .52em .95em .55em;
+  margin: .55em 0;
+  font-size: .90em;
+  border-radius: 2px;
+}
+
+// à retenir — Klein
+.retenir {
+  @extend %encadre;
+  background: $klein-voile;
+  border-left: 4px solid $klein;
+}
+.retenir strong { color: $klein; }
+
+// contre-intuitif, piège — or
+.piege {
+  @extend %encadre;
+  background: $or-voile;
+  border-left: 4px solid $or;
+}
+.piege strong { color: #8C6D12; }
+
+// définition, cadre formel — Prusse
+.definition {
+  @extend %encadre;
+  background: $prusse-voile;
+  border-left: 4px solid $prusse;
+}
+
+// question posée à la salle — argent, discret
+.question {
+  @extend %encadre;
+  background: #F6F7F9;
+  border-left: 4px solid $argent;
+  font-style: italic;
+  color: $prusse;
+}
+
+// ---- Chiffre mis en avant -------------------------------------------------
+.chiffre {
+  display: block;
+  font-size: 1.75em;
+  font-weight: 700;
+  color: $klein;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+}
+.chiffre-or { color: $or; }
+.chiffre-prusse { color: $prusse; }
+
+.legende {
+  display: block;
+  font-size: .68em;
+  color: $argent-fonce;
+  margin-top: .18em;
+}
+
+// ---- Utilitaires ----------------------------------------------------------
+.source  { font-size: .52em; color: $argent-fonce; margin-top: .7em; }
+.small   { font-size: .84em; }
+.xsmall  { font-size: .70em; }
+.xxsmall { font-size: .60em; }
+.centre  { text-align: center; }
+
+.reveal .columns { gap: 1.1em; }
+
+// séparateur doré
+.filet-or {
+  border: 0;
+  height: 2px;
+  background: linear-gradient(90deg, $or 0%, rgba(201,162,39,.15) 100%);
+  margin: .5em 0 .7em;
+}
+
+// ---- Formules -------------------------------------------------------------
+.reveal .math.display { color: $prusse; }
+.reveal mjx-container[display="true"] { margin: .45em 0 !important; }
+
+// formule encadrée, résultat à retenir
+.formule-cle {
+  background: $blanc;
+  border: 1px solid $klein;
+  border-left: 4px solid $klein;
+  padding: .3em .8em;
+  margin: .5em auto;
+  display: inline-block;
+}
+
+// ---- Schémas SVG ----------------------------------------------------------
+.schema {
+  display: block;
+  margin: .35em auto;
+  max-width: 100%;
+}
+.schema text { font-family: $font-family-sans-serif; }
+
+// ---- Pied de page et numéro -----------------------------------------------
+.reveal .footer {
+  color: $argent-fonce;
+  font-size: .52em;
+  border-top: 1px solid $argent-clair;
+  padding-top: .2em;
+}
+.reveal .slide-number {
+  background: transparent;
+  color: $argent-fonce;
+  font-size: .55em;
+}
+
+// ---- Résultat empirique attendu --------------------------------------------
+.resultat {
+  @extend %encadre;
+  background: #F4F8F4;
+  border-left: 4px solid #4A7C59;
+}
+.resultat strong { color: #35603F; }

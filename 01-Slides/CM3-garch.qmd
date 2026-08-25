@@ -1,0 +1,624 @@
+---
+title: "Chapitre 3 — Modèles ARCH et GARCH univariés"
+subtitle: "Économétrie Financière · M2"
+# Configuration commune (thème, tableau blanc, découpage) : _quarto.yml à la racine
+format:
+  revealjs:
+    footer: "Économétrie Financière — Chapitre 3"
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  fig.width = 10,
+  fig.height = 5,
+  dpi = 192,
+  fig.keep = "last",
+  message = FALSE,
+  warning = FALSE,
+  results = "markup"
+)
+```
+
+**Objectifs du chapitre**
+
+- Comprendre la nécessité des modèles de volatilité
+- Maîtriser les différents types de modèles ARCH/GARCH
+- Savoir tester et estimer ces modèles
+- Interpréter les résultats
+- Comparer les modèles asymétriques
+
+::: {.notes}
+**Ouverture.** Ce chapitre est le cœur du cours — sur les deux formats,
+c'est celui qui reçoit le plus de temps. Voir `06-Enseignant/deroule-*.qmd`
+pour le découpage en séances propre à chaque site.
+
+La partie applicative (import de données, spécification `rugarch`,
+comparaison de modèles, VaR, backtesting) est entièrement dans
+`03-TP/TP3-garch.qmd` — ce chapitre ne montre aucun code, volontairement :
+c'est en TP que les étudiants l'écrivent eux-mêmes.
+:::
+
+------------------------------------------------------------------------
+
+# Introduction
+
+Engle (1982) : article fondateur qui a donné une littérature prolifique
+tant théorique qu'empirique.
+
+Permet de modéliser la variance conditionnelle (volatilité) en fonction
+d'une certaine information.
+
+Avant 1982, la variance était **constante** dans tous les modèles
+économétriques.
+
+::: {.notes}
+**5 min.** C'est le moment de reprendre l'image d'ouverture du chapitre 1 :
+rendement plat, rendement au carré structuré. Ce chapitre formalise
+pourquoi.
+:::
+
+------------------------------------------------------------------------
+
+## Exemple : AR(1) avec variance constante
+
+Soit un processus AR(1) :
+$$y_t = \varphi y_{t-1} + \varepsilon_t, \quad \forall t$$
+
+avec :
+
+- $\forall t,\, \varepsilon_t \sim \text{i.i.n}(0,\sigma^2)$
+- $|\varphi| < 1$
+- Le processus fonctionne depuis un temps infiniment long.
+
+**Décomposition** :
+$$
+\begin{aligned}
+y_t &= \varphi y_{t-1} + \varepsilon_t \\
+    &= \varphi(\varphi y_{t-2} + \varepsilon_{t-1}) + \varepsilon_t \\
+    &= \varphi^2 y_{t-2} + \varphi\varepsilon_{t-1} + \varepsilon_t \\
+    &\vdots \\
+    &= \varphi^n y_{t-n} + \sum_{j=0}^{n-1} \varphi^j \varepsilon_{t-j} \\
+    &\xrightarrow[n\to\infty]{} \sum_{j=0}^{\infty} \varphi^j \varepsilon_{t-j}
+\end{aligned}
+$$
+
+------------------------------------------------------------------------
+
+### Moments marginaux
+
+**Espérance marginale** :
+$$\mathbb{E}(y_t) = \sum_{j=0}^{\infty} \varphi^j \underbrace{\mathbb{E}(\varepsilon_{t-j})}_{=0} = 0$$
+
+**Variance marginale** :
+$$
+\begin{aligned}
+\mathbb{V}(y_t) &= \sum_{j=0}^{\infty} \mathbb{V}(\varphi^j \varepsilon_{t-j}) \\
+                &= \sum_{j=0}^{\infty} \varphi^{2j} \underbrace{\mathbb{V}(\varepsilon_{t-j})}_{=\sigma^2} \\
+                &= \sigma^2 \sum_{j=0}^{\infty} \varphi^{2j} = \frac{\sigma^2}{1-\varphi^2}
+\end{aligned}
+$$
+
+------------------------------------------------------------------------
+
+### Moments conditionnels
+
+Soit $\Omega_t$ l'ensemble d'information en $t$.
+
+**Espérance conditionnelle** :
+$$\mathbb{E}_t(y_{t+1}) = \mathbb{E}(y_{t+1} \mid \Omega_t) = \mathbb{E}_t(\varphi y_t + \varepsilon_{t+1}) = \varphi y_t$$
+
+**Variance conditionnelle** :
+$$\mathbb{V}_t(y_{t+1}) = \mathbb{V}_t(\varphi y_t + \varepsilon_{t+1}) = \mathbb{V}_t(\varepsilon_{t+1}) = \sigma^2 = \text{constante}$$
+
+::: {.retenir}
+**À retenir** : dans ce modèle, la variance conditionnelle est
+**constante** — c'est précisément ce que les modèles ARCH/GARCH vont
+relâcher.
+:::
+
+- Les modèles de type ARCH généralisent les modèles classiques en
+  introduisant la possibilité que les variances conditionnelles soient
+  dépendantes du temps (*time-varying*).
+- Mandelbrot (1963), qui a introduit les fractales, notait déjà que les
+  séries financières sont bien prises en compte par des modèles de ce
+  type.
+- Les séries financières ont une kurtosis élevée (leptokurtiques) : les
+  valeurs éloignées de la moyenne y sont plus nombreuses que sous
+  normalité.
+
+------------------------------------------------------------------------
+
+# Quelques modèles univariés
+
+Une seule variable endogène : $y_t \in \mathbb{R}$ (le rendement du
+CAC40, par exemple).
+
+------------------------------------------------------------------------
+
+## Le modèle ARCH(1), Engle (1982)
+
+AR(1) avec erreurs ARCH(1) :
+$$y_t = \mu + \varphi y_{t-1} + \varepsilon_t, \quad \forall t$$
+$$\mathbb{E}_t(y_t) = \mu + \varphi y_{t-1}$$
+
+avec, $\forall t$ :
+
+- Les $\varepsilon_t$ sont des bruits blancs faibles (b.b.f.)
+  - Centrés : $\mathbb{E}(\varepsilon_t) = 0$
+  - Homoscédastiques : $\mathbb{V}(\varepsilon_t) = \sigma^2$
+  - Covariances nulles : $\mathbb{Cov}(\varepsilon_t,\varepsilon_{t'}) = 0$ pour $t \neq t'$ (non corrélés, mais pas indépendants)
+- $\mathbb{E}_{t-1}(\varepsilon_t) = 0$ : équation de différence de martingale
+- $\mathbb{V}_{t-1}(\varepsilon_t) = \sigma_t^2 = c + a \underbrace{\varepsilon_{t-1}^2}_{\text{ARCH(1)}}$
+
+::: {.piege}
+**Contraintes** : $c > 0,\; a \geq 0$ pour que la variance ne soit pas
+dégénérée (nulle).
+:::
+
+------------------------------------------------------------------------
+
+### Propriétés des $\varepsilon_t$
+
+En ajoutant $\varepsilon_t^2 - \sigma_t^2$ des deux côtés de
+$\mathbb{V}_{t-1}(\varepsilon_t) = \sigma_t^2 = c + a\varepsilon_{t-1}^2$ :
+$$\varepsilon_t^2 = c + a \varepsilon_{t-1}^2 + u_t, \qquad u_t \text{ b.b.f.}$$
+
+**Moments marginaux** :
+$$\mathbb{E}(\varepsilon_t) = 0, \qquad \mathbb{V}(\varepsilon_t) = \sigma^2$$
+
+**Décomposition** :
+$$
+\mathbb{E}(\varepsilon_t^2) = c + a \,\mathbb{E}(\varepsilon_{t-1}^2)
+\;\Rightarrow\; \mathbb{V}(\varepsilon_t)(1-a) = c
+\;\Rightarrow\; \mathbb{V}(\varepsilon_t) = \frac{c}{1-a} = \sigma^2
+$$
+si $1-a > 0$, soit $a<1$.
+
+::: {.piege}
+Contrainte supplémentaire pour que la variance marginale existe :
+$0 \leq a < 1$.
+:::
+
+------------------------------------------------------------------------
+
+### Théorème des projections itérées
+
+*(dit aussi « des trois perpendiculaires »)*
+
+Soient $\Omega_1 \subset \Omega_2$ deux ensembles d'information :
+$$\mathbb{E}_{\Omega_1}(z_{t+h}) = \mathbb{E}_{\Omega_1}\big(\mathbb{E}_{\Omega_2}(z_{t+h})\big)$$
+
+Exemple ($\Omega_1$ : info en $t-1$, $\Omega_2$ : info en $t$) :
+$$\mathbb{E}_{t-1}(z_{t+h}) = \mathbb{E}_{t-1}\big(\mathbb{E}_t(z_{t+h})\big)$$
+
+Exemple ($\Omega_1 = \emptyset$) :
+$$\underbrace{\mathbb{E}(z_{t+h})}_{\text{moment marginal}} = \mathbb{E}\big(\underbrace{\mathbb{E}_t(z_{t+h})}_{\text{moment conditionnel}}\big)$$
+
+::: {.question}
+Pourquoi cet outil ici ? Il sert à relier moments marginaux et moments
+conditionnels de $\varepsilon_t$ à un horizon $h$ quelconque — la
+question centrale d'un modèle ARCH.
+:::
+
+------------------------------------------------------------------------
+
+### Propriétés des $y_t$
+
+$$y_t = \mu + \varphi y_{t-1} + \varepsilon_t, \quad \forall t$$
+
+**Moments marginaux** :
+$$\mathbb{E}(y_t) = \frac{\mu}{1-\varphi}, \qquad \mathbb{V}(y_t) = \frac{\sigma^2}{1-\varphi^2}$$
+
+**Autocovariances** :
+$$\mathbb{Cov}(y_t, y_{t+k}) = \sigma^2 \frac{\varphi^k}{1-\varphi^2}$$
+
+**Moments conditionnels** :
+$$\mathbb{E}_t(y_{t+1}) = \mu + \varphi y_t, \qquad \mathbb{V}_t(y_{t+1}) = h_{t+1} = c + a\varepsilon_t^2 \neq \text{constante}$$
+
+::: {.retenir}
+La variance conditionnelle de $y_{t+1}$ dépend de l'information en $t$ —
+c'est exactement l'effet recherché.
+:::
+
+------------------------------------------------------------------------
+
+## Modèle ARCH(q)
+
+Engle (1982). On suppose la normalité conditionnelle :
+$\varepsilon_t \mid \Psi_{t-1} \sim \mathcal{N}(0, h_t)$.
+
+::: {.definition}
+**ARCH(q)**
+
+$$h_t = \mathbb{V}_t(\varepsilon_t) = \alpha_0 + \sum_{j=1}^{q} \alpha_j \varepsilon_{t-j}^2, \qquad y_t = x_t' b + \varepsilon_t$$
+
+Contraintes de positivité : $\alpha_0 > 0$ et $\forall j,\, \alpha_j \geq 0$.
+:::
+
+------------------------------------------------------------------------
+
+### Théorème d'Engle
+
+- Les $\varepsilon_t$ sont stationnaires en covariance $\Leftrightarrow \sum_{j=1}^{q} \alpha_j < 1$.
+- Si stationnaires en covariance :
+$$\mathbb{V}(\varepsilon_t) = \frac{\alpha_0}{1 - \sum_{j=1}^{q} \alpha_j}, \quad \forall t$$
+
+**Preuve** : en prenant l'espérance de
+$\varepsilon_t^2 = \alpha_0 + \sum_j \alpha_j \varepsilon_{t-j}^2 + u_t$
+et en notant que $\mathbb{E}(\varepsilon_{t-j}^2) = \mathbb{V}(\varepsilon_t)$
+pour tout $j$ à l'état stationnaire :
+$$\mathbb{V}(\varepsilon_t)\Big(1 - \sum_{j=1}^{q}\alpha_j\Big) = \alpha_0$$
+
+------------------------------------------------------------------------
+
+### Estimation d'un ARCH(1)
+
+Soit $y_t = \mu + \varepsilon_t$ avec $h_t = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2$.
+On estime $\mu, \alpha_0, \alpha_1$ par maximum de vraisemblance.
+
+::: {.piege}
+Pour garantir $\widehat{\alpha}_1 \in [0,1[$ sans contrainte explicite
+dans l'optimisation, on reparamétrise :
+$$h_t = \delta_0^2 + \delta_1^2 \varepsilon_{t-1}^2$$
+On estime $\widehat{\mu}, \widehat{\delta}_0, \widehat{\delta}_1$, puis
+$\widehat{\alpha}_0 = \widehat{\delta}_0^2 \geq 0$ et
+$\widehat{\alpha}_1 = \widehat{\delta}_1^2 \geq 0$.
+:::
+
+------------------------------------------------------------------------
+
+## Modèle GARCH(p,q)
+
+Bollerslev (1986).
+
+::: {.definition}
+$$h_t = \alpha_0 + \sum_{i=1}^{q} \alpha_i \varepsilon_{t-i}^2 + \sum_{j=1}^{p} \beta_j h_{t-j}, \qquad y_t = x_t' b + \varepsilon_t$$
+
+Contraintes de positivité : $\alpha_0 > 0$, $\alpha_i \geq 0$, $\beta_j \geq 0$.
+:::
+
+Le **GARCH(1,1)** est la norme :
+$$h_t = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2 + \beta_1 h_{t-1}$$
+
+Avec l'opérateur retard $L$, $h_t(1-\beta(L)) = \alpha_0 + \alpha(L)\varepsilon_t^2$
+— un GARCH(1,1) revient à estimer un ARCH($\infty$).
+
+------------------------------------------------------------------------
+
+### Théorème de Bollerslev
+
+- Stationnarité en covariance $\Leftrightarrow \sum_i \alpha_i + \sum_j \beta_j < 1$.
+- Si stationnaire :
+$$\mathbb{V}(\varepsilon_t) = \frac{\alpha_0}{1 - \sum_i \alpha_i - \sum_j \beta_j}$$
+
+**Preuve pour GARCH(1,1)** : en prenant l'espérance de
+$h_t = \alpha_0 + \alpha_1\varepsilon_{t-1}^2 + \beta_1 h_{t-1}$ à l'état
+stationnaire :
+$$\mathbb{V}(\varepsilon_t)(1-\alpha_1-\beta_1) = \alpha_0$$
+
+::: {.piege}
+Nelson et Cao (1992) : la positivité de $h_t$ peut tenir sous des
+conditions plus faibles que celles de Bollerslev. Exemple, GARCH(1,2) :
+$\alpha_0 \geq 0,\, \alpha_1 \geq 0,\, \beta_1 \geq 0,\, \alpha_2 \geq -\beta_1\alpha_1$
+(donc $\alpha_2$ peut être négatif).
+:::
+
+------------------------------------------------------------------------
+
+### Prévision de la variance conditionnelle
+
+Pour un GARCH(1,1), horizon $s$ :
+
+- $s=1$ : $\mathbb{E}_t(h_{t+1}) = \alpha_0 + \alpha_1\varepsilon_t^2 + \beta_1 h_t = h_{t+1}$
+- $s \geq 2$ :
+$$\mathbb{E}_t(h_{t+s}) = \alpha_0 \frac{1-(\alpha_1+\beta_1)^s}{1-(\alpha_1+\beta_1)} + (\alpha_1+\beta_1)^s h_t$$
+
+::: {.retenir}
+Quand $s \to \infty$, $\mathbb{E}_t(h_{t+s}) \to \dfrac{\alpha_0}{1-\alpha_1-\beta_1} = \mathbb{V}(\varepsilon_t)$ :
+tout choc sur la variance finit par s'effacer (non-persistance en
+variance). C'est le contraste avec l'IGARCH, deux slides plus loin.
+:::
+
+------------------------------------------------------------------------
+
+## Modèle ARCH-M
+
+*ARCH in Mean*, Engle, Lilien, Robbins (1987) : la variance conditionnelle
+devient elle-même variable explicative de la moyenne.
+
+$$
+h_t = \alpha_0 + \sum_{i=1}^{q}\alpha_i\varepsilon_{t-i}^2 + \sum_{j=1}^{p}\beta_j h_{t-j}, \qquad
+y_t = x_t'b + z_t + \varepsilon_t
+$$
+
+où $z_t$ est fonction de la volatilité : $z_t = \delta h_t$,
+$z_t = \delta \sqrt{h_t}$, $z_t = \delta \log h_t$, etc.
+
+::: {.definition}
+Interprétation : $y_t$ typiquement un rendement, expliqué en partie par
+une prime de risque proportionnelle à la volatilité elle-même.
+:::
+
+------------------------------------------------------------------------
+
+## Modèle IGARCH
+
+*Integrated GARCH* : cas limite persistant en variance.
+
+$$h_t = \alpha_0 + \sum_i \alpha_i \varepsilon_{t-i}^2 + \sum_j \beta_j h_{t-j}, \qquad \sum_i\alpha_i + \sum_j\beta_j = 1$$
+
+$\mathbb{V}(\varepsilon_t)$ **n'existe pas** — non stationnarité en
+covariance.
+
+IGARCH(1,1) : $h_t = \alpha_0 + \alpha_1\varepsilon_{t-1}^2 + \beta_1 h_{t-1}$,
+$\alpha_1+\beta_1=1$. Prévision :
+$$\mathbb{E}_t(h_{t+s}) = \alpha_0 s + h_t, \quad \forall s \geq 2$$
+
+::: {.piege}
+Contraste avec le GARCH(1,1) standard : ici, tout choc sur $h_t$
+**persiste** indéfiniment, il ne s'efface jamais quand $s\to\infty$. En
+pratique, on estime un GARCH(1,1) : si $\widehat\alpha_1+\widehat\beta_1
+\simeq 1$, le modèle est proche d'un IGARCH.
+:::
+
+------------------------------------------------------------------------
+
+## Modèle NARCH
+
+*Nonlinear ARCH*, Bera et Higgins (1989, 1992) :
+
+$$h_t = \Big(\varphi_0(\sigma^2)^\delta + \sum_{j=1}^{q}\varphi_j(\varepsilon_{t-j}^2)^\delta\Big)^{1/\delta}$$
+
+avec $\varphi_0>0$, $\varphi_j\geq0$, $\sum_j\varphi_j=1$, $\delta>0$.
+
+- $\delta = 1$ : ARCH(q) standard.
+- $\delta \to 0^+$ : modèle de Pantula (1986)/Geweke (1986), en log :
+$$\log h_t = \varphi_0\log(\sigma^2) + \sum_{j=1}^{q}\varphi_j\log(\varepsilon_{t-j}^2)$$
+
+------------------------------------------------------------------------
+
+## Modèles à seuil
+
+### TARCH
+
+*Threshold ARCH*, Zakoïan (1991) :
+
+$$y_t = \big(\varphi_0 + \varphi_1 y_{t-1}\mathbb{1}_{y_{t-1}\leq0} - \varphi_2 y_{t-1}\mathbb{1}_{y_{t-1}>0}\big)u_t, \quad u_t\sim\mathcal N(0,1)$$
+
+$$
+\mathbb{V}_t(y_t) = \begin{cases}
+(\varphi_0+\varphi_1 y_{t-1})^2 & \text{si } y_{t-1}\leq0 \\
+(\varphi_0-\varphi_2 y_{t-1})^2 & \text{sinon}
+\end{cases}
+$$
+
+------------------------------------------------------------------------
+
+### QARCH
+
+*Qualitative ARCH*, Gourieroux et Monfort (1992) : partition
+$A_1,\dots,A_n$ de $\mathbb{R}$, régime déterminé par $y_{t-1}$.
+
+Pour $n=3$ :
+$$
+y_t = \begin{cases}
+\alpha_1+\beta_1 u_t & \text{si } y_{t-1}\in A_1\\
+\alpha_2+\beta_2 u_t & \text{si } y_{t-1}\in A_2\\
+\alpha_3+\beta_3 u_t & \text{si } y_{t-1}\in A_3
+\end{cases}
+\qquad
+\mathbb{V}_t(y_t) = \begin{cases}\beta_1^2\\\beta_2^2\\\beta_3^2\end{cases}
+$$
+
+------------------------------------------------------------------------
+
+## Modèles asymétriques
+
+*Effet de levier* : le **signe** du choc affecte la volatilité — absent
+de tous les modèles précédents.
+
+La *News Impact Curve* (NIC) mesure la force de cette asymétrie. Pour un
+GARCH(1,1) :
+$$\text{NIC}(\varepsilon_t) = \alpha_0 + \alpha_1\varepsilon_t^2 + \beta_1\bar h, \qquad \bar h = \mathbb{V}(\varepsilon_t)$$
+
+::: {.question}
+Que devrait montrer la NIC d'un modèle *symétrique* comme le GARCH
+standard, tracée en fonction de $\varepsilon_t$ ? Une parabole
+symétrique — c'est précisément ce que les modèles qui suivent viennent
+casser.
+:::
+
+------------------------------------------------------------------------
+
+### EGARCH
+
+*Exponential GARCH*, Nelson (1988, 1991) :
+
+$$\log h_t = \alpha_0 + \sum_{k=1}^{q}\alpha_k\big(\theta z_{t-k} + \gamma|z_{t-k}| - \gamma\sqrt{2/\pi}\big) + \sum_{j=1}^{p}\beta_j\log h_{t-j}$$
+
+avec $z_t = \varepsilon_t/\sqrt{h_t}$. Pas de contrainte de signe : $h_t = \exp(\log h_t) > 0$ automatiquement.
+
+**NIC d'un EGARCH(1,1)** :
+$$
+\text{NIC}(\varepsilon_t) = \begin{cases}
+\exp\{A + \alpha_1(\theta+\gamma)\,\varepsilon_t/\sqrt{\bar h}\} & \varepsilon_t \geq 0\\
+\exp\{A + \alpha_1(\theta-\gamma)\,\varepsilon_t/\sqrt{\bar h}\} & \text{sinon}
+\end{cases}
+$$
+L'asymétrie est portée par $\gamma$.
+
+------------------------------------------------------------------------
+
+### GJR-GARCH
+
+Glosten, Jagannathan et Runkle (1993). GJR(1,1,1) — la norme :
+$$h_t = \alpha_0 + \gamma_1\varepsilon_{t-1}^2 + \beta_1 h_{t-1} + \varphi_1 D_{t-1}\varepsilon_{t-1}^2, \qquad D_{t-1}=\mathbb{1}_{\varepsilon_{t-1}\leq0}$$
+
+**NIC** — le terme en $\varphi_1$ n'est actif que lorsque $D_{t-1}=1$, donc
+pour un choc **négatif** :
+$$
+\text{NIC}(\varepsilon_t) = \begin{cases}
+\alpha_0+(\gamma_1+\varphi_1)\varepsilon_t^2+\beta_1\bar h & \varepsilon_t\leq0\\
+\alpha_0+\gamma_1\varepsilon_t^2+\beta_1\bar h & \varepsilon_t>0
+\end{cases}
+$$
+$\varphi_1$ mesure la force de l'asymétrie ; $\varphi_1 > 0$ traduit
+l'effet de levier usuel (un choc négatif accroît davantage la volatilité
+qu'un choc positif de même ampleur).
+
+::: {.notes}
+**Point de vigilance.** La version précédente de ce chapitre (source
+Créteil, `EF_CH3.Rmd`) inversait les deux cas de la NIC par rapport à la
+définition de $D_{t-1}$ donnée juste au-dessus — incohérence
+mathématique, corrigée ici. À vérifier une fois contre Glosten,
+Jagannathan et Runkle (1993) si vous voulez une deuxième source avant de
+projeter cette slide.
+:::
+
+------------------------------------------------------------------------
+
+### LST GARCH
+
+*Logistic Smooth Transition*, Hagerud (1996), González-Rivera (1998) :
+$$h_t = \gamma + \big[\alpha_1+\alpha_2 F(\varepsilon_{t-1})\big]\varepsilon_{t-1}^2 + \beta_1 h_{t-1}, \qquad F(\varepsilon_{t-1}) = \frac{1}{1+e^{-\theta\varepsilon_{t-1}}} - \frac12$$
+
+- $\theta$ petit ($\simeq 0{,}5$) : transition lente entre régimes.
+- $\theta$ grand ($\simeq 200$) : quasi changement de régime à seuil.
+
+::: {.notes}
+**Bilan de la section — 5 min.** Ne pas chercher l'exhaustivité en
+séance : TARCH/QARCH/NARCH/LST sont là pour montrer la diversité de la
+famille, mais EGARCH et GJR sont les deux modèles réellement travaillés
+en TP (`03-TP/TP3-garch.qmd`) et attendus au projet/examen.
+:::
+
+------------------------------------------------------------------------
+
+# Tests
+
+## Test d'Engle (1982)
+
+Pour un ARCH(q) : $h_t = \alpha_0 + \sum_{j=1}^q \alpha_j\varepsilon_{t-j}^2$.
+
+- $H_0 : \alpha_1=\dots=\alpha_q=0$ (homoscédasticité conditionnelle)
+- $H_1 : \exists j,\, \alpha_j\neq0$ (hétéroscédasticité conditionnelle)
+
+Ce test détecte **toute forme** d'hétéroscédasticité conditionnelle,
+mais n'indique pas quel modèle utiliser.
+
+------------------------------------------------------------------------
+
+### Procédure
+
+1. MCO sur $y_t = x_t'b+\varepsilon_t$ $\to$ $\widehat\varepsilon_t$.
+2. MCO sur la régression auxiliaire :
+$$\widehat\varepsilon_t^2 = \alpha_0+\alpha_1\widehat\varepsilon_{t-1}^2+\dots+\alpha_q\widehat\varepsilon_{t-q}^2+u_t \;\to\; R^2$$
+3. Statistique de test :
+$$(T-q)R^2 \;\overset{H_0}{\sim}\; \chi^2_q$$
+
+::: {.retenir}
+C'est exactement le test réalisé sous `rugarch`/`FinTS` en TP — la seule
+différence est que le logiciel automatise les trois étapes.
+:::
+
+------------------------------------------------------------------------
+
+# Estimation
+
+Quasi-maximum de vraisemblance, sous normalité conditionnelle :
+$$
+\log L_T(\theta) = -\frac{T}{2}\log 2\pi - \frac12\sum_{t=1}^{T}\log h_t - \frac12\sum_{t=1}^{T}\frac{(y_t-m_t)^2}{h_t}
+$$
+
+$\widehat\theta_T = \arg\max_\theta \log L_T(\theta)$.
+
+Sous hypothèses générales :
+$$\widehat\theta_T \to \theta_0, \qquad \sqrt{T}(\widehat\theta_T-\theta_0) \overset{\text{asy}}{\sim} \mathcal N(0, J^{-1}IJ^{-1})$$
+
+------------------------------------------------------------------------
+
+### Dans la pratique
+
+- La maximisation est complexe (méthodes itératives : BHHH, BFGS…).
+- Les valeurs initiales comptent — risque de maximum local.
+- Après estimation : tests de diagnostic sur les résidus standardisés
+  (autocorrélation, normalité, effet ARCH résiduel).
+
+::: {.notes}
+Ce triptyque de diagnostics (autocorrélation / normalité / ARCH
+résiduel) est exactement celui appliqué en TP après chaque estimation —
+le mentionner ici évite qu'il paraisse ad hoc plus tard.
+:::
+
+------------------------------------------------------------------------
+
+# Leptokurticité des séries financières
+
+**Skewness** (asymétrie) :
+$$S = \frac{\mathbb{E}(\varepsilon_t^3)}{(\mathbb{E}(\varepsilon_t^2))^{3/2}}$$
+Sous normalité, $S=0$.
+
+**Kurtosis** (aplatissement) :
+$$K = \frac{\mathbb{E}(\varepsilon_t^4)}{(\mathbb{E}(\varepsilon_t^2))^2}$$
+Sous normalité, $K=3$ (excès de kurtosis $=K-3$). $K>3$ : plus de
+valeurs extrêmes que sous normalité.
+
+------------------------------------------------------------------------
+
+### Test de Jarque-Bera
+
+Sous l'hypothèse de normalité :
+$$S \sim \mathcal N\Big(0,\frac6T\Big), \qquad K\sim\mathcal N\Big(3,\frac{24}T\Big)$$
+$$\frac{T}{6}S^2 + \frac{T}{24}(K-3)^2 \sim \chi^2_2$$
+
+------------------------------------------------------------------------
+
+### Dans la pratique
+
+1. Soit $y_t$ (rendements du CAC40, par exemple).
+2. Estimer un ARMA sur $y_t$ $\to$ $\widehat\varepsilon_t$ $\to$ souvent
+   $K>3$ $\to$ hétéroscédasticité conditionnelle (confirmée par le test
+   d'Engle).
+3. Estimer un GARCH sur $y_t$ $\to$ $\widehat z_t = \widehat\varepsilon_t/\sqrt{\widehat h_t}$
+   $\to$ si $K>3$ persiste :
+   - essayer d'autres modèles (GJR, NARCH…),
+   - essayer une autre distribution que la normale.
+
+------------------------------------------------------------------------
+
+### Distribution de Student
+
+$\varepsilon_t \sim t_\nu$ :
+$$
+f(\varepsilon_t) = \frac{1}{\sqrt\pi}\,\Gamma\!\Big(\frac{\nu+1}{2}\Big)\Gamma\!\Big(\frac{\nu}{2}\Big)^{-1}\frac{1}{\sqrt{(\nu-2)h_t}}\Big(1+\frac{\varepsilon_t^2}{h_t(\nu-2)}\Big)^{-\frac{\nu+1}{2}}
+$$
+
+::: {.retenir}
+En pratique (`rugarch`), c'est souvent la distribution de Student
+(`"std"`) ou de Student asymétrique (`"sstd"`) qui absorbe l'essentiel
+de la leptokurticité résiduelle laissée par une spécification normale —
+voir le TP.
+:::
+
+::: {.notes}
+**Clôture — 5 min.** Résumer la procédure en trois temps (ARMA →
+hétéroscédasticité → GARCH → leptokurticité résiduelle → distribution
+alternative) : c'est la démarche complète attendue au projet, et le fil
+que le TP fait dérouler sur données réelles.
+:::
+
+------------------------------------------------------------------------
+
+# Références
+
+- Bera, A.K., Higgins, M.L. (1993). ARCH Models: Properties, Estimation and Testing. *Journal of Economic Surveys*, 7(4), 305-366.
+- Bollerslev, T. (1986). Generalized Autoregressive Conditional Heteroskedasticity. *Journal of Econometrics*, 31(3), 307-327.
+- Engle, R.F. (1982). Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation. *Econometrica*, 50(4), 987-1007.
+- Engle, R.F., Lilien, D.M., Robbins, R.P. (1987). Estimating Time Varying Risk Premia in the Term Structure: The ARCH-M Model. *Econometrica*, 55(2), 391-407.
+- Glosten, L.R., Jagannathan, R., Runkle, D.E. (1993). On the Relation between the Expected Value and the Volatility of the Nominal Excess Return on Stocks. *Journal of Finance*, 48(5), 1779-1801.
+- Nelson, D.B. (1991). Conditional Heteroskedasticity in Asset Returns: A New Approach. *Econometrica*, 59(2), 347-370.
+- Zakoïan, J.M. (1994). Threshold Heteroskedastic Models. *Journal of Economic Dynamics and Control*, 18(5), 931-955.

@@ -1,0 +1,533 @@
+---
+title: "Chapitre 1 — Données financières et faits stylisés"
+subtitle: "Économétrie Financière · M2"
+# Configuration commune (thème, tableau blanc, découpage) : _quarto.yml à la racine
+format:
+  revealjs:
+    footer: "Économétrie Financière — Chapitre 1"
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  fig.width = 10,
+  fig.height = 5,
+  dpi = 192,
+  fig.keep = "last",
+  message = FALSE,
+  warning = FALSE,
+  results = "markup"
+)
+```
+
+**Objectifs du chapitre**
+
+- Définir l'économétrie financière et son cadre (échantillon, DGP, modèle)
+- Distinguer prix et rendements, rendement simple et log-rendement
+- Caractériser une distribution par ses moments (moyenne, variance, asymétrie, kurtosis)
+- Reconnaître les faits stylisés des séries financières — en particulier ceux qui motivent les modèles ARCH/GARCH du chapitre 3
+
+::: {.notes}
+**Ouverture.** C'est le chapitre d'entrée du cours : peu de résultats
+nouveaux en soi, mais tout le vocabulaire et les faits empiriques que le
+chapitre 3 va formaliser (variance conditionnelle, effet ARCH) sont
+posés ici. Ne pas passer trop de temps sur la section 2
+(échantillon/DGP/modèle paramétrique) — c'est un rappel d'économétrie
+générale, pas spécifique à la finance.
+
+La partie applicative (import de données, calcul de rendements,
+statistiques descriptives, tests de normalité) est entièrement dans
+`03-TP/TP1-donnees-faits-stylises.qmd`.
+:::
+
+------------------------------------------------------------------------
+
+# Introduction
+
+## Qu'est-ce que l'économétrie financière ?
+
+::: {.definition}
+**Économétrie financière** : application de méthodes statistiques aux
+données des marchés financiers. Elle se distingue des autres formes
+d'économétrie par l'accent mis sur l'analyse des prix d'actifs négociés
+sur des marchés compétitifs et liquides.
+:::
+
+> « L'économétrie est l'analyse quantitative des phénomènes économiques
+> réels basée sur le développement conjoint de la théorie et de
+> l'observation, reliés par des méthodes d'inférence appropriées. »
+> — Samuelson, Koopmans et Stone (1954)
+
+Objectifs : combiner théorie financière et théorie statistique, modéliser
+les données financières, prédire les variables financières, développer
+des modèles adaptés aux faits stylisés (ex. : GARCH — Prix Nobel 2003,
+R.F. Engle).
+
+------------------------------------------------------------------------
+
+## Les quatre piliers de l'économétrie (financière)
+
+1. Un **échantillon** de données
+2. Un **modèle économétrique**
+3. Une **méthode d'estimation**
+4. Des **méthodes d'inférence**
+
+::: {.definition}
+**Processus Générateur de Données (DGP)** : distribution de probabilité
+conjointe supposée caractériser toute la population dont l'échantillon
+est extrait. Le défi de l'économétrie est de tirer des conclusions sur
+le DGP (paramètres inconnus) à partir d'une seule réalisation observée.
+:::
+
+Population (paramètres inconnus) $\to$ Échantillon $\to$ Statistique
+d'échantillon (estimateur) $\to$ **Inférence**.
+
+::: {.notes}
+Trois types de données rencontrées en économétrie : coupe transversale
+(pas de dimension temporelle), séries temporelles (une entité, plusieurs
+dates, l'ordre compte), panel (plusieurs entités × plusieurs dates). Ce
+cours ne travaille qu'avec des séries temporelles.
+:::
+
+------------------------------------------------------------------------
+
+## Modèle paramétrique vs non paramétrique
+
+::: {.definition}
+**Modèle paramétrique** : la relation entre $Y$ et $X$ est entièrement
+caractérisée par un ensemble fini de paramètres $\theta$ :
+$$Y = f(X;\theta) + \epsilon$$
+avec $f(\cdot)$ connue. Dans un modèle **non paramétrique**, $f(\cdot)$
+est inconnue et doit elle-même être estimée.
+:::
+
+Démarche générale : (1) spécification du modèle, (2) estimation des
+paramètres, (3) tests de diagnostic (significativité, spécification,
+rétrovalidation), (4) interprétation et utilisation (prévision).
+
+Tous les modèles de ce cours (ARMA, GARCH) sont **paramétriques**.
+
+------------------------------------------------------------------------
+
+# Données financières
+
+## Prix et fréquence d'échantillonnage
+
+Soit $P_t$ le prix d'un actif au temps $t$. Les marchés « liquides »
+(changes, indices, grandes capitalisations) enregistrent les prix
+plusieurs fois par minute.
+
+::: {.definition}
+Fréquences **régulières** : les prix sont observés tous les $m$ pas de
+temps. On distingue les fréquences **intrajournalières** (haute
+fréquence : 10 secondes, 1 minute, 5 minutes…) des fréquences plus
+**basses** (journalière, hebdomadaire, mensuelle…).
+:::
+
+::: {.retenir}
+Ce cours travaille exclusivement à fréquence **régulière**, le plus
+souvent journalière — c'est la fréquence à laquelle l'effet ARCH est le
+plus marqué (chapitre 3).
+:::
+
+------------------------------------------------------------------------
+
+## Prix de clôture, prix ajustés
+
+- **Prix d'ouverture** : prix à l'ouverture de la séance.
+- **Prix de clôture** : prix final de la séance — c'est le prix
+  généralement retenu pour une fréquence journalière.
+- **Prix ajustés** : corrigés des fractionnements d'actions et des
+  dividendes (les dividendes sont réintégrés comme s'ils étaient
+  immédiatement réinvestis).
+
+::: {.piege}
+Toujours vérifier si une série téléchargée (Yahoo Finance, etc.) est en
+prix bruts ou en prix ajustés — les rendements calculés diffèrent
+sensiblement en présence de détachements de dividendes.
+:::
+
+------------------------------------------------------------------------
+
+## Prix vs rendements
+
+Bien que les **prix** soient ce qui est observé, la plupart des études
+empiriques portent sur les **rendements** :
+
+- Résumé **sans échelle** de l'opportunité d'investissement.
+- Propriétés statistiques plus attractives que les prix.
+- Les prix sont en général **non stationnaires**, les rendements
+  **stationnaires** (fait stylisé 1, plus loin).
+
+------------------------------------------------------------------------
+
+## Rendement simple et log-rendement
+
+::: {.definition}
+**Rendement simple (net)** :
+$$\tilde R_t = \frac{P_t - P_{t-1}}{P_{t-1}}$$
+
+**Rendement composé continûment (log-rendement)** :
+$$R_t = \ln\left(\frac{P_t}{P_{t-1}}\right) = p_t - p_{t-1}$$
+où $p_t = \ln P_t$.
+:::
+
+Les deux sont très proches quand $\tilde R_t$ est proche de 0 :
+$$R_t = \ln(1+\tilde R_t) \simeq \tilde R_t \quad \text{si } \tilde R_t \simeq 0$$
+
+::: {.retenir}
+Convention du cours : sauf mention contraire, $R_t$ désigne le
+**log-rendement**. Les log-rendements s'additionnent dans le temps — pas
+les rendements simples — ce qui les rend commodes pour l'agrégation
+temporelle (slide suivante).
+:::
+
+------------------------------------------------------------------------
+
+## Rendement à $k$ périodes et rendement annualisé
+
+::: {.definition}
+$$R_t[k] = \sum_{j=0}^{k-1} R_{t-j}[1] = \ln\left(\frac{P_t}{P_{t-k}}\right)$$
+:::
+
+Preuve : la multiplication des rapports de prix devient une somme de
+logarithmes — c'est l'intérêt pratique majeur du log-rendement.
+
+**Rendement annualisé** (moyen), détention sur $k$ années :
+$$\text{Annualisé}(R_t[k]) = \frac1k\sum_{j=0}^{k-1}R_{t-j}[1]$$
+
+::: {.question}
+Un actif a un rendement journalier moyen de $0{,}013\%$. Quel est son
+rendement annualisé (base 365 jours) ? *(Réponse : $365\times0{,}013\%
+\approx 4{,}75\%$.)*
+:::
+
+**Rendement excédentaire** : $R_t - R_{f,t}$, où $R_{f,t}$ est un taux de
+référence (taux sans risque).
+
+------------------------------------------------------------------------
+
+# Propriétés statistiques des rendements
+
+## Distribution des rendements
+
+$R_t$ est une variable aléatoire à valeurs réelles, de densité $f_R(r)$
+et de fonction de répartition $F_R(r) = \Pr(R_t\le r)$.
+
+::: {.definition}
+**Hypothèse de normalité** :
+$$R_t \sim \mathcal N(\mu,\sigma^2), \qquad
+f_R(r) = \frac1{\sigma\sqrt{2\pi}}\exp\!\left(-\frac{(r-\mu)^2}{2\sigma^2}\right)$$
+:::
+
+C'est l'hypothèse de référence — et celle que les faits stylisés
+(section suivante) vont largement invalider empiriquement.
+
+------------------------------------------------------------------------
+
+## Les quatre premiers moments
+
+::: {.definition}
+Moment non centré : $m_k=\mathbb E(R_t^k)$. Moment centré :
+$\mu_k=\mathbb E\big((R_t-m_1)^k\big)$.
+
+| Moment | Formule | Interprétation |
+|---|---|---|
+| Moyenne | $\mu=\mathbb E(R_t)$ | tendance centrale |
+| Variance | $\sigma^2=\mathbb E\big((R_t-\mu)^2\big)$ | dispersion |
+| Asymétrie | $S=\mathbb E\big((R_t-\mu)^3\big)/\sigma^3$ | symétrie |
+| Kurtosis | $K=\mathbb E\big((R_t-\mu)^4\big)/\sigma^4$ | épaisseur des queues |
+:::
+
+**Volatilité** $\equiv \sigma = \sqrt{\mathbb V(R_t)}$ : c'est l'objet
+central du chapitre 3.
+
+------------------------------------------------------------------------
+
+## Asymétrie et kurtosis : interprétation
+
+- $S(R_t) < 0$ : distribution **asymétrique à gauche** — les grandes
+  réalisations négatives (krachs) sont plus probables que les grandes
+  réalisations positives.
+- $K(R_t) > 3$ : distribution **leptokurtique** (queues épaisses) —
+  $K=3$ : mésokurtique, $K<3$ : platykurtique.
+- **Excès de kurtosis** $\equiv K(R_t) - 3$.
+
+::: {.definition}
+Sous normalité : $S(R_t)=0$ et $K(R_t)=3$ — toujours, quelle que soit la
+variance. Sous une loi de Student à $\nu$ degrés de liberté ($\nu>4$) :
+$$S(R_t)=0, \qquad K(R_t)=3+\frac6{\nu-4}$$
+symétrique mais leptokurtique ; $K\to3$ quand $\nu\to\infty$ (la Student
+tend vers la normale).
+:::
+
+------------------------------------------------------------------------
+
+## Estimateurs des moments
+
+Échantillon $\{R_1,\dots,R_T\}$ i.i.d., réalisation
+$\{r_1,\dots,r_T\}$ = le jeu de données.
+
+$$\widehat\mu_T=\overline R_T=\frac1T\sum_{t=1}^T R_t, \qquad
+\widehat\sigma_T^2=\frac1{T-1}\sum_{t=1}^T(R_t-\overline R_T)^2$$
+
+$$\widehat S_T=\frac{T^{-1}\sum_t(R_t-\overline R_T)^3}{\widehat\sigma_T^3}, \qquad
+\widehat K_T=\frac{T^{-1}\sum_t(R_t-\overline R_T)^4}{\widehat\sigma_T^4}$$
+
+::: {.retenir}
+Un estimateur $\widehat\theta$ est lui-même une **variable aléatoire** —
+il a une distribution d'échantillonnage. C'est ce qui permet de
+construire des tests et intervalles de confiance (slide suivante).
+:::
+
+------------------------------------------------------------------------
+
+## Comportement asymptotique
+
+Si $R_1,\dots,R_T$ i.i.d. avec moments finis, les moments d'échantillon
+**convergent en probabilité** :
+$$\widehat\mu_T\xrightarrow{p}\mu, \quad
+\widehat\sigma_T^2\xrightarrow{p}\sigma^2, \quad
+\widehat S_T\xrightarrow{p}S(R_t), \quad
+\widehat K_T\xrightarrow{p}K(R_t)$$
+
+Sous normalité, **distributions asymptotiques** ($T\to\infty$) :
+$$\sqrt T(\widehat\mu_T-\mu)\overset{d}{\to}\mathcal N(0,\sigma^2), \qquad
+\sqrt T(\widehat S_T-0)\overset{d}{\to}\mathcal N(0,6), \qquad
+\sqrt T(\widehat K_T-3)\overset{d}{\to}\mathcal N(0,24)$$
+
+::: {.notes}
+Ces trois résultats asymptotiques sont la brique de base des tests de
+normalité (kurtosis, asymétrie, Jarque-Bera) qui reviennent dans les
+faits stylisés 3, 4 et 6 juste après, puis dans le test d'Engle au
+chapitre 3.
+:::
+
+------------------------------------------------------------------------
+
+## Mesures robustes de dispersion
+
+::: {.definition}
+**MAD** (Median Absolute Deviation) :
+$$\text{MAD} = \text{médiane}\big(|r_t - \text{médiane}(r_t)|\big)$$
+
+**IQR** (écart interquartile) : $\text{IQR} = Q(0{,}75) - Q(0{,}25)$.
+:::
+
+Deux mesures de dispersion **robustes** aux valeurs aberrantes —
+utiles quand la présence de queues épaisses (fait stylisé 3) rend
+l'écart-type sensible aux quelques observations extrêmes.
+
+------------------------------------------------------------------------
+
+# Faits stylisés
+
+## Huit faits stylisés (Fan et Yao, 2015)
+
+1. Stationnarité
+2. Absence d'autocorrélation (des rendements)
+3. Queues épaisses
+4. Asymétrie
+5. Clustering de la volatilité
+6. Gaussianité agrégative
+7. Dépendance à longue mémoire
+8. Effet de levier
+
+*Fan, J. et Yao, Q. (2015), The Elements of Financial Econometrics.*
+*Cont, R. (2001), Empirical Properties of Asset Returns, Quantitative Finance.*
+
+::: {.notes}
+Illustration filée sur un exemple unique (indice, rendements
+journaliers) en TP — voir `03-TP/TP1-donnees-faits-stylises.qmd`. Ici,
+on ne montre aucun graphique ni code : chaque fait est énoncé et, quand
+c'est pertinent, accompagné d'un test formel.
+:::
+
+------------------------------------------------------------------------
+
+## Fait 1 : Stationnarité
+
+Les **prix** sont en général non stationnaires (tendance, crises), les
+**rendements** sont (faiblement) stationnaires.
+
+::: {.definition}
+**Stationnarité faible (ordre 2)** : $\{x_t\}$ est faiblement
+stationnaire ssi
+
+1. $\forall t,\ \mathbb E(x_t^2) < \infty$
+2. $\forall t,\ \mathbb E(x_t) = \mu$ ne dépend pas de $t$
+3. $\forall (t,h),\ \mathrm{Cov}(x_t,x_{t+h}) = \gamma_h$ ne dépend pas de $t$
+:::
+
+::: {.retenir}
+C'est l'hypothèse de travail de tout le cours : ARMA (chapitre 2) et
+GARCH (chapitre 3) supposent tous deux une stationnarité (faible ou en
+covariance) des séries modélisées.
+:::
+
+------------------------------------------------------------------------
+
+## Fait 2 : Absence d'autocorrélation
+
+Les autocorrélations des rendements $R_t$ sont en général non
+significatives (sauf microstructure à très haute fréquence).
+
+::: {.piege}
+L'absence d'autocorrélation des rendements **ne signifie pas** que les
+$R_t$ sont indépendants — voir le fait stylisé 7 (mémoire longue des
+rendements au **carré**).
+:::
+
+::: {.definition}
+$$\rho_k = \mathrm{Corr}(R_t,R_{t-k}) = \frac{\gamma_k}{\sigma^2}, \qquad
+\widehat\rho_k = \frac1{(T-k)\sigma^2}\sum_{t=k+1}^T(R_t-\widehat\mu)(R_{t-k}-\widehat\mu)$$
+:::
+
+------------------------------------------------------------------------
+
+### Tests Q : Box-Pierce et Ljung-Box
+
+$H_0: \rho_1=\dots=\rho_K=0$ contre $H_1: \exists j,\ \rho_j\ne0$.
+
+::: {.definition}
+**Box-Pierce** : $\displaystyle Q_{BP}=T\sum_{k=1}^K\widehat\rho_k^2 \overset{H_0}{\sim}\chi^2(K)$
+
+**Ljung-Box** (plus utilisé en pratique) :
+$$Q_K = T(T+2)\sum_{k=1}^K\frac{\widehat\rho_k^2}{T-k} \overset{H_0}{\sim}\chi^2(K)$$
+:::
+
+Règle de décision usuelle : rejet de $H_0$ si $Q > $ quantile
+$\chi^2(K)$ à $95\%$, ou p-valeur $<5\%$.
+
+::: {.notes}
+Le test Q de Ljung-Box réapparaît en fait stylisé 7, appliqué cette fois
+aux rendements **au carré** — c'est là qu'il devient discriminant.
+:::
+
+------------------------------------------------------------------------
+
+## Fait 3 : Queues épaisses
+
+La distribution des rendements a des queues plus épaisses qu'une
+distribution normale (excès de kurtosis $K-3 > 0$).
+
+::: {.definition}
+Test de kurtosis : $H_0: K(R_t)=3$ contre $H_1: K(R_t)>3$.
+$$\frac{\widehat K_T - 3}{\sqrt{24/T}} \overset{H_0}{\sim} \mathcal N(0,1)$$
+:::
+
+::: {.question}
+Un indice affiche $\widehat K_T = 8{,}9$ sur $T=1255$ observations.
+Tester $H_0$ au seuil $5\%$ (valeur critique $\Phi^{-1}(0{,}95)=1{,}645$).
+*(Réponse : statistique très supérieure à 1,645 $\Rightarrow$ rejet de
+$H_0$ $\Rightarrow$ distribution leptokurtique — cas quasi systématique
+sur données financières journalières.)*
+:::
+
+------------------------------------------------------------------------
+
+## Fait 4 : Asymétrie
+
+La distribution des rendements est souvent **asymétrique à gauche** :
+les baisses de marché sont plus abruptes que les reprises, les
+investisseurs réagissent plus fortement aux mauvaises nouvelles.
+
+::: {.definition}
+Test d'asymétrie : $H_0: S(R_t)=0$ contre $H_1: S(R_t)<0$.
+$$\frac{\widehat S_T}{\sqrt{6/T}} \overset{H_0}{\sim} \mathcal N(0,1)$$
+:::
+
+Règle de décision : rejet si la statistique est **inférieure** au
+quantile $\Phi^{-1}(0{,}05) = -1{,}645$, ou p-valeur $<5\%$.
+
+------------------------------------------------------------------------
+
+## Fait 5 : Clustering de la volatilité
+
+Les grands changements de prix (en valeur absolue) tendent à être suivis
+de grands changements de prix ; les périodes calmes alternent avec des
+périodes agitées.
+
+::: {.retenir}
+Ce clustering est la manifestation visuelle directe de l'**autocorrélation
+des rendements au carré** (fait stylisé 7). C'est *l'observation*
+empirique que les modèles ARCH/GARCH du chapitre 3 formalisent.
+:::
+
+::: {.notes}
+C'est le moment de faire le lien explicite en séance avec l'exemple AR(1)
+à variance constante qui ouvre le chapitre 3 : rendement journalier
+« plat » en apparence mais rendement au carré très structuré dans le
+temps.
+:::
+
+------------------------------------------------------------------------
+
+## Fait 6 : Gaussianité agrégative
+
+Un rendement à $k$ jours est l'agrégation de $k$ rendements journaliers.
+Quand $k$ augmente, la loi des grands nombres joue et la distribution
+des rendements sur un horizon plus long (mensuel) se rapproche d'une
+normale.
+
+::: {.definition}
+**Test de Jarque-Bera** : $H_0: S(R_t)=0$ et $K(R_t)=3$.
+$$JB = \frac T6\widehat S_T^2 + \frac T{24}(\widehat K_T-3)^2 \overset{H_0}{\sim}\chi^2(2)$$
+:::
+
+::: {.piege}
+Le test de Jarque-Bera **n'est pas** un test de normalité au sens
+strict : le rejet de $H_0$ implique que $R_t$ n'est pas normal, mais la
+non-rejet n'implique que symétrie + mésokurtique (d'autres lois
+partagent ces deux propriétés). Valeur critique à $5\%$ : $5{,}9915$.
+:::
+
+------------------------------------------------------------------------
+
+## Fait 7 : Dépendance à longue mémoire
+
+Les rendements **absolus** et **au carré** présentent des
+autocorrélations significatives et persistantes (contrairement aux
+rendements bruts, fait stylisé 2).
+
+::: {.retenir}
+**Effet ARCH** $\equiv$ autocorrélation des rendements au carré. Il est
+plus marqué à haute fréquence (journalier) et s'atténue aux fréquences
+plus basses (mensuel, trimestriel). C'est ce fait précis que teste
+formellement le test d'Engle (1982), chapitre 3.
+:::
+
+------------------------------------------------------------------------
+
+## Fait 8 : Effet de levier
+
+Les rendements sont **négativement corrélés** avec les variations de
+leur propre volatilité.
+
+- Quand les prix baissent, le ratio dette/fonds propres des entreprises
+  augmente $\Rightarrow$ risque et volatilité augmentent.
+- Volatilité en hausse $\Rightarrow$ rendement exigé plus élevé
+  $\Rightarrow$ pression baissière sur les prix.
+- Asymétrie de l'effet : la hausse de volatilité suite à une baisse de
+  prix est typiquement plus forte que la baisse de volatilité suite à
+  une hausse de même ampleur.
+
+::: {.notes}
+**Clôture — 5 min.** L'effet de levier est le fait stylisé qui motive
+directement les modèles **asymétriques** (EGARCH, GJR-GARCH) du chapitre
+3 : leur *News Impact Curve* est construite précisément pour capter
+cette asymétrie de réponse de la volatilité au signe du choc.
+:::
+
+------------------------------------------------------------------------
+
+# Références
+
+- Campbell, J.Y., Lo, A.W., MacKinlay, A.C. (1997). *The Econometrics of Financial Markets*. Princeton University Press.
+- Cont, R. (2001). Empirical Properties of Asset Returns: Stylized Facts and Statistical Issues. *Quantitative Finance*, 1, 223-236.
+- Fan, J., Yao, Q. (2015). *The Elements of Financial Econometrics*. Science Press, Beijing.
+- Brooks, C. (2014). *Introductory Econometrics for Finance*, 3ᵉ édition. Cambridge University Press.
+- Tsay, R. (2002). *Analysis of Financial Time Series*. Wiley.

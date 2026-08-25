@@ -1,0 +1,136 @@
+---
+title: "Économétrie Financière"
+author: "Corrigé — Fiche TD #3"
+subtitle: "Modèles ARCH et GARCH — exercices sur papier"
+format: pdf
+---
+
+---
+
+# Exercice 1 — Propriétés du modèle ARCH(1)
+
+**(a)** $\varepsilon_t = \sqrt{h_t}\,z_t$ avec $h_t$ connu à la date $t-1$
+(il ne dépend que de $\varepsilon_{t-1}$) et $z_t$ indépendant de
+l'information passée. Donc :
+$$\mathbb{E}_{t-1}(\varepsilon_t) = \sqrt{h_t}\,\mathbb{E}_{t-1}(z_t) = \sqrt{h_t}\cdot 0 = 0$$
+$$\mathbb{E}_{t-1}(\varepsilon_t^2) = h_t\,\mathbb{E}_{t-1}(z_t^2) = h_t\cdot 1 = h_t$$
+
+**(b)** $\varepsilon_t$ étant une transformation linéaire d'une normale
+centrée réduite par un facteur d'échelle $\sqrt{h_t}$ connu en $t-1$ :
+$$\varepsilon_t \mid \mathcal{I}_{t-1} \sim \mathcal{N}(0, h_t)$$
+
+**(c)** En prenant l'espérance non conditionnelle de
+$h_t = \alpha_0+\alpha_1\varepsilon_{t-1}^2$ et en utilisant
+$\mathbb{E}(\varepsilon_{t-1}^2)=\mathbb{V}(\varepsilon_t)$ à l'état
+stationnaire :
+$$\mathbb{V}(\varepsilon_t) = \alpha_0 + \alpha_1\mathbb{V}(\varepsilon_t) \;\Rightarrow\; \mathbb{V}(\varepsilon_t)(1-\alpha_1)=\alpha_0$$
+La variance existe et est positive si $0 \leq \alpha_1 < 1$, et vaut alors
+$\mathbb{V}(\varepsilon_t) = \dfrac{\alpha_0}{1-\alpha_1}$.
+
+**(d)** $h_t$ dépend positivement de $\varepsilon_{t-1}^2$ : un choc de
+grande ampleur (positif ou négatif) en $t-1$ relève mécaniquement la
+variance conditionnelle en $t$, donc la probabilité d'un nouveau choc de
+grande ampleur. Symétriquement, un choc faible tend à être suivi d'un
+choc faible. C'est exactement le regroupement de volatilité observé sur
+les rendements financiers.
+
+---
+
+# Exercice 2 — Du GARCH(1,1) à l'ARCH($\infty$)
+
+**(a)** En substituant récursivement :
+$$
+\begin{aligned}
+h_t &= \alpha_0+\alpha_1\varepsilon_{t-1}^2+\beta_1 h_{t-1}\\
+    &= \alpha_0+\alpha_1\varepsilon_{t-1}^2+\beta_1(\alpha_0+\alpha_1\varepsilon_{t-2}^2+\beta_1 h_{t-2})\\
+    &= \alpha_0(1+\beta_1) + \alpha_1(\varepsilon_{t-1}^2+\beta_1\varepsilon_{t-2}^2) + \beta_1^2 h_{t-2}\\
+    &\ \ \vdots\\
+    &= \alpha_0\sum_{i=0}^{n-1}\beta_1^i + \alpha_1\sum_{i=0}^{n-1}\beta_1^i\varepsilon_{t-1-i}^2 + \beta_1^n h_{t-n}
+\end{aligned}
+$$
+Si $0\leq\beta_1<1$, en laissant $n\to\infty$ (et $\beta_1^n h_{t-n}\to 0$) :
+$$h_t = \frac{\alpha_0}{1-\beta_1} + \alpha_1\sum_{i=0}^{\infty}\beta_1^i\,\varepsilon_{t-1-i}^2$$
+un ARCH($\infty$) à poids géométriquement décroissants.
+
+**(b)** Il faut $0 \leq \beta_1 < 1$ pour que $\sum_i \beta_1^i$
+converge (poids sommables) ; $\alpha_1 \geq 0$ assure des poids positifs.
+
+**(c)** Si $\alpha_1+\beta_1=1$ (IGARCH), $\beta_1$ reste $<1$ donc la
+représentation ARCH($\infty$) ci-dessus reste valide, mais la variance
+**non conditionnelle** $\alpha_0/(1-\alpha_1-\beta_1)$ n'existe plus (le
+dénominateur s'annule). Les chocs sur la variance ne s'estompent jamais :
+propriété de **persistance intégrale** en variance, à l'opposé du
+GARCH(1,1) stationnaire où $\mathbb{E}_t(h_{t+s}) \to \mathbb{V}(\varepsilon_t)$
+quand $s\to\infty$.
+
+---
+
+# Exercice 3 — Stationnarité et variance non conditionnelle
+
+**(a)** $\sum_i\alpha_i+\sum_j\beta_j<1$, soit ici $\alpha_1+\beta_1<1$.
+
+**(b)** $\mathbb{V}(\varepsilon_t) = \dfrac{\alpha_0}{1-\alpha_1-\beta_1}$.
+
+**(c)** Modèle A $(\alpha_0,\alpha_1,\beta_1)=(0{,}02,\,0{,}05,\,0{,}94)$ :
+persistance $\alpha_1+\beta_1=0{,}99$,
+$\mathbb{V}(\varepsilon_t)=0{,}02/0{,}01=2$.
+
+Modèle B $(0{,}05,\,0{,}15,\,0{,}80)$ : persistance $=0{,}95$,
+$\mathbb{V}(\varepsilon_t)=0{,}05/0{,}05=1$.
+
+Le modèle A a une variance de long terme deux fois plus élevée, **et**
+une persistance nettement supérieure : la demi-vie d'un choc
+($\ln(0{,}5)/\ln(\alpha_1+\beta_1)$) est d'environ 69 jours pour A contre
+14 jours pour B. Un choc de volatilité s'estompe donc presque cinq fois
+plus lentement dans le modèle A.
+
+---
+
+# Exercice 4 — Asymétrie et *News Impact Curve*
+
+**(a)** $D_{t-1}=1$ (donc le terme en $\varphi_1$ est actif) exactement
+quand $\varepsilon_{t-1}\leq 0$ :
+$$
+\text{NIC}(\varepsilon_t) = \begin{cases}
+\alpha_0+(\gamma_1+\varphi_1)\varepsilon_t^2+\beta_1\bar h & \varepsilon_t\leq0\\
+\alpha_0+\gamma_1\varepsilon_t^2+\beta_1\bar h & \varepsilon_t>0
+\end{cases}
+$$
+
+**(b)** Non : à $|\varepsilon_t|$ égal, la branche négative porte le
+coefficient $\gamma_1+\varphi_1$ contre $\gamma_1$ pour la branche
+positive. Le choc négatif domine dès que $\varphi_1 > 0$.
+
+**(c)** $\varphi_1 = 0$ : les deux branches coïncident
+($\alpha_0+\gamma_1\varepsilon_t^2+\beta_1\bar h$ dans les deux cas), on
+retrouve exactement la NIC — et donc le modèle — GARCH(1,1) standard.
+
+**(d)** La NIC du GARCH standard est une parabole symétrique en
+$\varepsilon_t=0$ ; celle du GJR avec $\varphi_1>0$ est une parabole
+« coudée », plus pentue à gauche de zéro qu'à droite. L'EGARCH obtient un
+effet comparable mais en modélisant $\log h_t$ par une fonction linéaire
+par morceaux de $z_{t-1}$ plutôt qu'un simple terme indicatrice — la
+transition entre les deux régimes y est encodée différemment, sans
+recours à un $D_{t-1}$ binaire.
+
+---
+
+# Exercice 5 — Test d'effet ARCH, à la main
+
+**(a)** $H_0: \alpha_1=\alpha_2=0$ (pas d'hétéroscédasticité
+conditionnelle d'ordre 1 ou 2) contre $H_1$ : au moins un des deux est
+non nul. Statistique : $(T-q)R^2$, avec ici $q=2$.
+
+**(b)** $(T-q)R^2 = (250-2)\times 0{,}084 = 248 \times 0{,}084 \approx 20{,}8$.
+Comparée à la valeur critique du $\chi^2_2$ à 5 % ($5{,}99$), on a
+$20{,}8 \gg 5{,}99$ : on **rejette** $H_0$, il y a hétéroscédasticité
+conditionnelle.
+
+**(c)** On peut conclure qu'un modèle de type ARCH/GARCH est justifié —
+la variance conditionnelle n'est pas constante. On ne peut en revanche
+**pas** conclure quel modèle (ARCH(q), GARCH(p,q), symétrique ou non,
+quelle distribution) est le mieux adapté : le test d'Engle détecte la
+présence d'hétéroscédasticité conditionnelle sans discriminer entre
+spécifications concurrentes — c'est l'objet de la comparaison par
+critères d'information (AIC/BIC) et des tests de diagnostic sur les
+résidus, vus en TP.

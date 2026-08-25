@@ -1,0 +1,64 @@
+---
+title: "Économétrie Financière"
+author: "Déroulé des séances — Paris 8"
+subtitle: "M2 MBFA, Université Paris 8 — format 36 h (12 séances de 3 h)"
+format: pdf
+---
+
+# Le format
+
+**12 séances de 3 h**, cours et applications sur `R` intégrés dans la
+même séance. C'est le double du format Créteil (18 h) sur les quatre
+mêmes chapitres — le temps supplémentaire sert à approfondir (tests de
+diagnostic complets, famille GARCH élargie, VEC/BEKK détaillés en plus
+du DCC), pas à ajouter de la matière hors-programme. Les chapitres de
+`01-Slides/` sont écrits au niveau de détail Paris 8 ; le format Créteil
+en est un sous-ensemble (voir `deroule-creteil.qmd`).
+
+# Le plan
+
+| # | Contenu | Support |
+|-|-------|--------|
+| **1** | Présentation, syllabus, économétrie financière : objet, données, fréquences, rendements | `00-Syllabus/syllabus-paris8.qmd` + `CM1-donnees-faits-stylises.qmd`, slides 1–9 |
+| **2** | Propriétés statistiques des rendements, faits stylisés | `CM1-donnees-faits-stylises.qmd`, slides 10–26 + `TD1-donnees-faits-stylises.qmd` |
+| **3** | `TP1-donnees-faits-stylises.qmd` + séries temporelles : concepts, stationnarité, ergodicité, AR(1)/AR(2)/AR($p$) | `TP1-donnees-faits-stylises.qmd` + `CM2-arma.qmd`, slides 1–12 |
+| **4** | MA, ARMA, extension VAR(1), estimation, tests de mauvaise spécification | `CM2-arma.qmd`, slides 13–26 + `TD2-arma.qmd` |
+| **5** | `TP2-arma.qmd` (identification, estimation, diagnostic) + ouverture chapitre 3 (introduction, exemple AR(1) à variance constante) | `TP2-arma.qmd` + `CM3-garch.qmd`, slides 1–5 |
+| **6** | Modèles ARCH/GARCH univariés — famille complète (ARCH, GARCH, ARCH-M, IGARCH, NARCH, seuils, asymétriques) | `CM3-garch.qmd`, slides 6–25 |
+| **7** | Tests (Engle), estimation (QMLE) | `CM3-garch.qmd`, slides 26–29 + `TD3-garch.qmd`, ex. 1–4 |
+| **8** | Leptokurticité, distribution de Student — clôture du chapitre 3 | `CM3-garch.qmd`, slides 30–34 + `TD3-garch.qmd`, ex. 5 |
+| **9** | `TP3-garch.qmd` — exploration, tests ARCH, estimation, comparaison de modèles | `TP3-garch.qmd`, exercices 1–4 |
+| **10** | `TP3-garch.qmd` — volatilité/prévision, VaR, backtesting, application personnelle | `TP3-garch.qmd`, exercices 5–7 |
+| **11** | GARCH multivarié : motivation, VEC, BEKK, corrélations conditionnelles (CCC, DCC) | `CM4-mgarch.qmd`, slides 1–17 + `TD4-mgarch.qmd`, ex. 1–5 |
+| **12** | Estimation (MLE, deux étapes, *variance targeting*), VaR de portefeuille et *backtesting* (Kupiec, Christoffersen), limites (fléau de la dimension) + `TP4-mgarch.qmd` sur le portefeuille du projet | `CM4-mgarch.qmd`, slides 18–29 + `TD4-mgarch.qmd`, ex. 6 + `TP4-mgarch.qmd` |
+
+# Points de passage à surveiller
+
+**Séances 6–8** portent l'essentiel du chapitre 3 — c'est volontaire,
+c'est le cœur du cours (cf. syllabus). Si le rythme est trop lent,
+resserrer les modèles à seuil (TARCH/QARCH, slides 20–21) en séance 6 :
+ils ne sont pas repris en TP et peuvent passer en lecture personnelle.
+
+**Séances 9–10** doublent la durée consacrée au TP3 par rapport au
+format Créteil (une seule séance) : c'est le temps de faire réellement
+tourner les 7 exercices, y compris l'application sur un actif personnel
+(exercice 7), qui prépare directement le projet.
+
+**Séance 12** est dense (12 slides, dont la nouvelle partie VaR/
+*backtesting*) et n'a plus la même marge qu'avant : si le retard
+s'accumule, les slides 27–28 (fléau de la dimension, logiciels) et le
+détail du test de Christoffersen (slide 26, l'intuition suffit) peuvent
+être renvoyés à une lecture personnelle sans perte pour le projet ou
+l'examen — l'essentiel (DCC, estimation en deux étapes, VaR de
+portefeuille et test de Kupiec, slides 15–25) doit être couvert en
+séance : c'est ce que `TP4-mgarch.qmd` (exercice 6) mobilise directement.
+
+# Avant la séance 1
+
+- [ ] Distribuer le syllabus (`00-Syllabus/syllabus-paris8.qmd`, rendu)
+- [ ] Vérifier l'environnement `R` de chacun (`rugarch`, `rmgarch`,
+      `quantmod`, `FinTS`, `moments` — voir `install-packages.R`)
+- [ ] Annoncer les deux échéances d'évaluation (projet 40 %, examen 60 %)
+- [ ] Faire choisir à chacun/chaque binôme son portefeuille de 3 à 5
+      actifs pour le projet (utile dès `TP1-donnees-faits-stylises.qmd`,
+      exercice 7, puis réutilisé jusqu'au `TP4-mgarch.qmd`)

@@ -1,0 +1,94 @@
+---
+title: "Économétrie Financière"
+author: "Fiche TP #2"
+subtitle: "Identification et estimation d'un ARMA sur données réelles"
+format: pdf
+---
+
+*S'appuie sur le chapitre 2 (`01-Slides/CM2-arma.qmd`). Les résidus
+obtenus ici serviront de point de départ pour le chapitre 3 (TP3).*
+
+---
+
+# Avant de commencer
+
+**Langage.** `R`. Le corrigé est dans
+`03-TP/corriges/TP2-arma-R-corrige.qmd`.
+
+**Packages clés.** `forecast` (`auto.arima`, `checkresiduals`), `tseries`
+(`adf.test`, `kpss.test`, `Box.test`, `jarque.bera.test`), `lmtest`
+(`bptest`, `coeftest`), `FinTS` (`ArchTest`).
+
+**Données.** Rendements journaliers d'une action ou d'un indice de votre
+choix (par exemple AAPL, 2018–2020, autour de la crise Covid).
+
+---
+
+# Exercice 1 — Stationnarité : prix vs rendements
+
+(a) Téléchargez les prix de clôture ajustés, calculez les log-rendements
+    en %.
+(b) Testez la stationnarité des prix, puis des rendements, avec le test
+    KPSS (`tseries::ur.kpss` ou `kpss.test`, $H_0$ : stationnarité).
+    Les deux tests concluent-ils comme attendu ?
+(c) Refaites le test ADF (`adf.test`, $H_0$ : racine unitaire) sur les
+    rendements. Les deux tests (KPSS, ADF) sont-ils cohérents entre eux
+    (attention à l'hypothèse nulle, qui est inversée d'un test à
+    l'autre) ?
+
+---
+
+# Exercice 2 — Identification visuelle
+
+(a) Tracez l'ACF et la PACF des rendements sur 20 retards.
+(b) D'après les signatures ACF/PACF du cours, quel(s) ordre(s) $(p,q)$
+    semblent compatibles avec ce que vous observez ? Justifiez.
+
+---
+
+# Exercice 3 — Estimation
+
+(a) Estimez un AR(1) (`arima(..., order = c(1,0,0))`) et examinez la
+    significativité des coefficients (`lmtest::coeftest`).
+(b) Estimez automatiquement un ARMA avec `forecast::auto.arima`.
+    L'ordre retenu correspond-il à votre lecture de l'exercice 2 ?
+(c) Comparez l'AIC des deux modèles. Lequel retenez-vous sur ce
+    critère ?
+
+---
+
+# Exercice 4 — Diagnostic du modèle retenu
+
+(a) Extrayez les résidus du modèle retenu à l'exercice 3.
+(b) Testez la normalité (QQ-plot, `tseries::jarque.bera.test`).
+(c) Testez l'absence d'autocorrélation résiduelle (`Box.test(...,
+    type = "Ljung-Box")`, à plusieurs ordres : 1, 6, 12).
+(d) Testez l'hétéroscédasticité (test de White, à construire "à la
+    main" par régression auxiliaire comme au TD2, ou `lmtest::bptest`).
+(e) Le modèle est-il congruent (aucun test rejeté) ? Sinon, lequel des
+    diagnostics pose problème ?
+
+---
+
+# Exercice 5 — Effet ARCH résiduel
+
+(a) Tracez les résidus au carré du modèle retenu. Un *clustering* de
+    volatilité est-il visible (cf. chapitre 1) ?
+(b) Appliquez le test d'Engle (`FinTS::ArchTest`) sur les résidus, à
+    plusieurs ordres (1, 6, 12).
+(c) Ce résultat est-il cohérent avec l'exercice 4(d) ? Quel chapitre du
+    cours propose une réponse directe à ce diagnostic ?
+
+---
+
+# Exercice 6 — Sur votre propre actif (préparation du projet)
+
+Recommencez les exercices 2 à 5 sur un autre actif de votre choix.
+L'ordre ARMA retenu automatiquement est-il stable d'un actif à l'autre ?
+L'effet ARCH résiduel est-il systématique ?
+
+::: {.notes}
+Conserver le code de sélection ARMA + diagnostic : la partie
+« modélisation de la moyenne » du projet suit exactement cette
+démarche, avant de passer à la modélisation de la variance (TP3).
+:::

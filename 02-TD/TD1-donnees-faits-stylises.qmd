@@ -1,0 +1,99 @@
+---
+title: "Économétrie Financière"
+author: "Fiche TD #1"
+subtitle: "Données financières et faits stylisés — exercices sur papier"
+format: pdf
+---
+
+*Prépare le TP1 (calcul de rendements et faits stylisés sur données réelles).*
+
+---
+
+# Exercice 1 — Rendement simple et log-rendement
+
+Le prix de clôture d'une action était de $52{,}30$€ le lundi et de
+$51{,}80$€ le mardi.
+
+(a) Calculez le rendement simple (net) $\tilde R_t$ et le log-rendement
+    $R_t$ de mardi.
+(b) Vérifiez numériquement que $R_t = \ln(1+\tilde R_t)$.
+(c) Le mercredi, le prix remonte à $52{,}30$€ (retour au niveau de
+    lundi). Calculez le rendement simple et le log-rendement du
+    mercredi. Le rendement simple sur deux jours (lundi $\to$ mercredi)
+    est-il la somme des deux rendements simples journaliers ? Et pour
+    les log-rendements ? Concluez sur l'intérêt pratique du
+    log-rendement.
+
+---
+
+# Exercice 2 — Rendement à $k$ périodes et rendement annualisé
+
+Les log-rendements journaliers d'un actif sur trois jours consécutifs
+sont $R_{\text{lun}} = 0{,}42\%$, $R_{\text{mar}} = -0{,}18\%$,
+$R_{\text{mer}} = 0{,}25\%$.
+
+(a) Calculez le log-rendement cumulé sur les trois jours,
+    $R_{\text{mer}}[3]$.
+(b) On suppose désormais qu'un actif a un rendement journalier moyen
+    constant de $R_t[1] = 0{,}02\%$. Calculez son rendement annualisé
+    (base 252 jours de bourse, puis base 365 jours calendaires).
+    Commentez l'écart entre les deux conventions.
+(c) Un investisseur affiche un rendement simple annuel de $12\%$ sur un
+    placement détenu 3 ans. Quel est le rendement simple annualisé
+    correspondant (moyenne géométrique) ? Est-il égal à $12\%/3$ ?
+    Justifiez à partir de la formule du cours.
+
+---
+
+# Exercice 3 — Tester la kurtosis et l'asymétrie, à la main
+
+Sur un échantillon de $T = 1255$ rendements journaliers d'un indice, on
+observe un coefficient d'asymétrie empirique $\widehat S_T = -0{,}62$ et
+un coefficient de kurtosis empirique $\widehat K_T = 8{,}90$.
+
+(a) Testez $H_0: K(R_t) = 3$ contre $H_1: K(R_t) > 3$ au seuil $5\%$
+    (valeur critique $\Phi^{-1}(0{,}95) = 1{,}645$). Concluez sur la
+    forme de la distribution.
+(b) Testez $H_0: S(R_t) = 0$ contre $H_1: S(R_t) < 0$ au même seuil
+    (valeur critique $\Phi^{-1}(0{,}05) = -1{,}645$). Concluez.
+(c) Calculez la statistique de Jarque-Bera correspondante et concluez au
+    seuil $5\%$ (valeur critique $\chi^2(2)$ à $5\%$ : $5{,}9915$). Le
+    rejet de $H_0$ ici permet-il de conclure que $R_t$ suit une loi de
+    Student ? Justifiez.
+
+---
+
+# Exercice 4 — Autocorrélations et test de Ljung-Box
+
+Sur le même échantillon ($T=1255$), les autocorrélations empiriques des
+**rendements** aux 3 premiers retards sont $\widehat\rho_1 = 0{,}01$,
+$\widehat\rho_2 = -0{,}02$, $\widehat\rho_3 = 0{,}015$ ; celles des
+**rendements au carré** sont $\widehat\rho_1^{(2)} = 0{,}18$,
+$\widehat\rho_2^{(2)} = 0{,}12$, $\widehat\rho_3^{(2)} = 0{,}14$.
+
+(a) Rappelez la statistique de test de Ljung-Box à l'ordre $K$ et sa loi
+    sous $H_0$.
+(b) Calculez $Q_3$ pour les rendements, puis pour les rendements au
+    carré (valeur critique $\chi^2(3)$ à $5\%$ : $7{,}815$).
+(c) Comparez les deux conclusions. Quel fait stylisé chacune illustre-t-elle ?
+(d) Quel est le nom donné à l'autocorrélation des rendements au carré
+    dans le cours, et quel chapitre la modélise explicitement ?
+
+---
+
+# Exercice 5 — Relier les faits stylisés aux modèles
+
+Pour chacune des observations empiriques suivantes, indiquez à quel(s)
+fait(s) stylisé(s) du cours elle correspond, et — en une phrase —
+quelle classe de modèle (vue ou à venir dans le cours) est motivée par
+cette observation :
+
+(a) Le prix d'une action suit une tendance de long terme et n'oscille
+    pas autour d'un niveau constant, contrairement à son rendement.
+(b) De longues périodes de faible volatilité alternent avec de courtes
+    périodes de très forte volatilité.
+(c) Un krach boursier de $-8\%$ en une séance fait davantage bondir la
+    volatilité des séances suivantes qu'une hausse de $+8\%$ ne le
+    ferait.
+(d) Les rendements mensuels d'un actif ressemblent visuellement bien
+    plus à une gaussienne que ses rendements journaliers.

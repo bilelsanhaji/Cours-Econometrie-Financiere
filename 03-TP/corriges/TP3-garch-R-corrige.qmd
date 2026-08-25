@@ -1,0 +1,389 @@
+---
+title: "Économétrie Financière"
+author: "Corrigé — Fiche TP #3 (R)"
+subtitle: "Estimation de modèles ARCH/GARCH sur données réelles"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  fig.width = 10,
+  fig.height = 6,
+  cache = TRUE
+)
+```
+
+```{r}
+#| label: packages
+library(quantmod)
+library(tidyverse)
+library(rugarch)
+library(FinTS)
+library(moments)
+library(gridExtra)
+library(reshape2)
+library(tseries)
+library(ggplot2)
+```
+
+# Exercice 1 — Les données parlent-elles déjà d'elles-mêmes ?
+
+## (a) Import et rendements
+
+```{r}
+#| label: donnees
+FCHI <- getSymbols("^FCHI", from = "2018-01-01", to = "2023-12-31",
+                    src = "yahoo", auto.assign = FALSE)
+cac_prices <- Cl(FCHI)
+
+cac_returns <- dailyReturn(cac_prices, type = "log") * 100
+names(cac_returns) <- "CAC40"
+cac_returns <- na.omit(cac_returns)
+```
+
+## (b) Prix et rendements
+
+```{r}
+#| label: graph-prix-rendements
+#| fig-width: 12
+#| fig-height: 8
+par(mfrow = c(2,1), mar = c(4,4,2,1))
+plot(cac_prices, main = "CAC40 - Prix de clôture", col = "navy", lwd = 1.5)
+grid()
+plot(cac_returns, main = "CAC40 - Rendements journaliers (%)", col = "darkred", lwd = 1.5)
+abline(h = 0, lty = 2, col = "gray")
+grid()
+```
+
+L'amplitude des rendements n'est pas constante dans le temps : de longues
+plages calmes alternent avec des plages agitées (2020 en particulier) —
+c'est le *clustering* de volatilité annoncé au chapitre 3.
+
+## (c) Statistiques descriptives et normalité
+
+```{r}
+#| label: stats-descriptives
+stats_df <- data.frame(
+  Statistique = c("Moyenne", "Écart-type", "Asymétrie", "Kurtosis",
+                  "Minimum", "Maximum", "Jarque-Bera", "p-valeur"),
+  Valeur = c(
+    round(mean(cac_returns), 4),
+    round(sd(cac_returns), 4),
+    round(skewness(cac_returns), 4),
+    round(kurtosis(cac_returns), 4),
+    round(min(cac_returns), 4),
+    round(max(cac_returns), 4),
+    round(jarque.bera.test(cac_returns)$statistic, 4),
+    round(jarque.bera.test(cac_returns)$p.value, 4)
+  )
+)
+knitr::kable(stats_df, caption = "Statistiques descriptives des rendements CAC40")
+```
+
+Kurtosis très supérieure à 3 (distribution leptokurtique), et la
+p-valeur du test de Jarque-Bera rejette la normalité au seuil usuel.
+
+## (d) ACF / PACF, rendements et rendements au carré
+
+```{r}
+#| label: acf-plots
+#| fig-width: 12
+#| fig-height: 10
+par(mfrow = c(2,2), mar = c(4,4,2,1))
+acf(cac_returns, lag.max = 20, main = "ACF - Rendements CAC40")
+pacf(cac_returns, lag.max = 20, main = "PACF - Rendements CAC40")
+acf(cac_returns^2, lag.max = 20, main = "ACF - Rendements carrés")
+pacf(cac_returns^2, lag.max = 20, main = "PACF - Rendements carrés")
+```
+
+Les rendements sont quasiment non autocorrélés (marché efficient), mais
+les rendements **au carré** montrent des autocorrélations nettement
+significatives : c'est la signature d'un effet ARCH, prévisible depuis
+le chapitre 3.
+
+---
+
+# Exercice 2 — Tester l'effet ARCH
+
+```{r}
+#| label: lb-test
+Box.test(cac_returns^2, lag = 12, type = "Ljung-Box")
+```
+
+```{r}
+#| label: arch-test
+ArchTest(cac_returns, lags = 12)
+```
+
+Les deux tests rejettent l'hypothèse nulle (homoscédasticité
+conditionnelle) — ce n'est pas surprenant : ce sont deux façons de
+détecter la même chose (le test d'Engle est construit sur la même
+régression auxiliaire que le test de Ljung-Box appliqué aux carrés, voir
+chapitre 3).
+
+---
+
+# Exercice 3 — Spécifier et estimer
+
+```{r}
+#| label: arch-estimation
+spec_arch <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1,0)),
+  mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+fit_arch <- ugarchfit(spec_arch, data = cac_returns, solver = "hybrid")
+```
+
+```{r}
+#| label: garch-estimation
+spec_garch <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1,1)),
+  mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+fit_garch <- ugarchfit(spec_garch, data = cac_returns, solver = "hybrid")
+
+coef_garch <- coef(fit_garch)
+alpha <- coef_garch["alpha1"]; beta <- coef_garch["beta1"]
+cat("Alpha :", round(alpha, 4), " Beta :", round(beta, 4),
+    " Persistance (alpha+beta) :", round(alpha + beta, 4), "\n")
+```
+
+```{r}
+#| label: gjr-estimation
+spec_gjr <- ugarchspec(
+  variance.model = list(model = "gjrGARCH", garchOrder = c(1,1)),
+  mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+fit_gjr <- ugarchfit(spec_gjr, data = cac_returns, solver = "hybrid")
+```
+
+```{r}
+#| label: egarch-estimation
+spec_egarch <- ugarchspec(
+  variance.model = list(model = "eGARCH", garchOrder = c(1,1)),
+  mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+fit_egarch <- ugarchfit(spec_egarch, data = cac_returns, solver = "hybrid")
+```
+
+La persistance $\widehat\alpha_1+\widehat\beta_1$ du GARCH(1,1) est
+proche de 1 (persistance élevée, demi-vie de plusieurs semaines — cf.
+TD3, exercice 3) : cohérent avec l'alternance de longues phases calmes
+et agitées observée à l'exercice 1(b).
+
+---
+
+# Exercice 4 — Choisir un modèle
+
+## (a) Comparaison AIC/BIC
+
+```{r}
+#| label: model-comparison
+comparison <- data.frame(
+  Modèle = c("ARCH(1)", "GARCH(1,1)", "GJR-GARCH(1,1)", "EGARCH(1,1)"),
+  AIC = c(infocriteria(fit_arch)[1], infocriteria(fit_garch)[1],
+          infocriteria(fit_gjr)[1], infocriteria(fit_egarch)[1]),
+  BIC = c(infocriteria(fit_arch)[2], infocriteria(fit_garch)[2],
+          infocriteria(fit_gjr)[2], infocriteria(fit_egarch)[2]),
+  LogLik = c(infocriteria(fit_arch)[5], infocriteria(fit_garch)[5],
+             infocriteria(fit_gjr)[5], infocriteria(fit_egarch)[5])
+)
+knitr::kable(comparison, caption = "Comparaison des modèles", digits = 4)
+```
+
+Le modèle à retenir est celui dont l'AIC (ou le BIC) est le plus faible
+— généralement un des deux modèles asymétriques sur ce type de données.
+
+## (b) Diagnostic des résidus
+
+```{r}
+#| label: residuals-tests
+#| fig-width: 12
+#| fig-height: 8
+residus <- residuals(fit_garch, standardize = TRUE)
+
+par(mfrow = c(2,2), mar = c(4,4,2,1))
+acf(residus, main = "ACF - Résidus standardisés")
+acf(residus^2, main = "ACF - Résidus² standardisés")
+qqnorm(residus, main = "QQ-plot vs normale"); qqline(residus, col = "red")
+hist(residus, breaks = 30, main = "Histogramme des résidus",
+     col = "lightblue", freq = FALSE)
+lines(seq(-4,4,0.1), dnorm(seq(-4,4,0.1)), col = "red", lwd = 2)
+
+Box.test(residus, lag = 12, type = "Ljung-Box")
+Box.test(residus^2, lag = 12, type = "Ljung-Box")
+```
+
+Un modèle correctement spécifié laisse des résidus standardisés sans
+autocorrélation résiduelle (ni sur les résidus, ni sur leurs carrés) —
+p-values des tests de Ljung-Box au-dessus de 5 %.
+
+## (c) Significativité de l'asymétrie
+
+```{r}
+#| label: asymetrie
+coef_gjr <- coef(fit_gjr)
+coef_egarch <- coef(fit_egarch)
+cat("GJR — gamma1 :", round(coef_gjr["gamma1"], 4), "\n")
+cat("EGARCH — gamma1 :", round(coef_egarch["gamma1"], 4), "\n")
+```
+
+Consultez `show(fit_gjr)` / `show(fit_egarch)` pour les écarts-types et
+p-values associés à ces coefficients. Un $\gamma_1$ positif et
+significatif (GJR) ou négatif et significatif (EGARCH, autre convention
+de signe) confirme un effet de levier.
+
+---
+
+# Exercice 5 — Visualiser et prévoir la volatilité
+
+```{r}
+#| label: volatility-plots
+#| fig-width: 12
+#| fig-height: 8
+vol_df <- data.frame(
+  Date = index(cac_returns),
+  ARCH = as.numeric(sigma(fit_arch)),
+  GARCH = as.numeric(sigma(fit_garch)),
+  GJR = as.numeric(sigma(fit_gjr)),
+  EGARCH = as.numeric(sigma(fit_egarch))
+)
+vol_melt <- melt(vol_df, id.vars = "Date",
+                  variable.name = "Modèle", value.name = "Volatilité")
+ggplot(vol_melt, aes(x = Date, y = Volatilité, color = Modèle)) +
+  geom_line() + theme_minimal() +
+  labs(title = "Volatilité conditionnelle estimée - CAC40", x = "", y = "Volatilité (%)") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+#| label: volatility-covid
+#| fig-width: 12
+#| fig-height: 6
+vol_covid <- vol_df |> filter(Date >= "2020-01-01" & Date <= "2020-06-30")
+vol_covid_melt <- melt(vol_covid, id.vars = "Date",
+                        variable.name = "Modèle", value.name = "Volatilité")
+ggplot(vol_covid_melt, aes(x = Date, y = Volatilité, color = Modèle)) +
+  geom_line(linewidth = 1) + theme_minimal() +
+  labs(title = "Volatilité pendant la crise COVID (2020)", x = "", y = "Volatilité (%)") +
+  theme(legend.position = "bottom")
+```
+
+Les modèles divergent nettement plus en période de crise : les
+spécifications asymétriques réagissent plus vite à la chute des
+marchés de mars 2020.
+
+```{r}
+#| label: forecast
+#| fig-width: 12
+#| fig-height: 6
+garch_forecast <- ugarchforecast(fit_garch, n.ahead = 20)
+plot(garch_forecast, which = 3)
+```
+
+La prévision converge vers la variance non conditionnelle
+$\widehat\alpha_0/(1-\widehat\alpha_1-\widehat\beta_1)$ — cf. TD3,
+exercice 3 — d'autant plus lentement que la persistance est proche de 1.
+
+---
+
+# Exercice 6 — Value-at-Risk et backtesting
+
+```{r}
+#| label: var-calculation
+#| fig-width: 12
+#| fig-height: 6
+alpha_var <- 0.05
+q_norm <- qnorm(alpha_var)
+
+var_df <- data.frame(
+  Date = index(cac_returns),
+  Rendements = as.numeric(cac_returns),
+  VaR = as.numeric(fitted(fit_garch) + sigma(fit_garch) * q_norm)
+)
+
+ggplot(var_df, aes(x = Date)) +
+  geom_line(aes(y = Rendements), color = "gray50", alpha = 0.7) +
+  geom_line(aes(y = VaR), color = "red", linewidth = 1) +
+  theme_minimal() +
+  labs(title = "VaR 95% - GARCH(1,1), résidus normaux", x = "", y = "Rendements / VaR") +
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+```{r}
+#| label: backtesting
+exceedances <- sum(var_df$Rendements < var_df$VaR, na.rm = TRUE)
+total <- nrow(var_df)
+exceed_rate <- exceedances / total
+z_kupiec <- (exceed_rate - alpha_var) / sqrt(alpha_var * (1 - alpha_var) / total)
+p_kupiec <- 2 * pnorm(-abs(z_kupiec))
+
+cat("Excès :", exceedances, "/", total,
+    " (", round(exceed_rate * 100, 2), "% observé vs", alpha_var * 100, "% théorique)\n")
+cat("Kupiec z =", round(z_kupiec, 4), " p =", round(p_kupiec, 4), "\n")
+```
+
+Si $p > 0{,}05$ : non-rejet, le modèle est bien calibré. Sinon, il
+sous-estime ou surestime le risque.
+
+```{r}
+#| label: var-student
+spec_garch_std <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1,1)),
+  mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
+  distribution.model = "std"
+)
+fit_garch_std <- ugarchfit(spec_garch_std, data = cac_returns, solver = "hybrid")
+
+q_std <- qdist("std", p = alpha_var, shape = coef(fit_garch_std)["shape"])
+var_std <- fitted(fit_garch_std) + sigma(fit_garch_std) * q_std
+exceed_std <- sum(as.numeric(cac_returns) < as.numeric(var_std), na.rm = TRUE)
+
+cat("Excès (Student) :", exceed_std, "/", total,
+    " (", round(exceed_std / total * 100, 2), "% )\n")
+```
+
+La distribution de Student, à queues plus épaisses que la normale,
+produit en général un taux de violations plus proche du taux théorique
+que la version gaussienne — cohérent avec la leptokurticité observée à
+l'exercice 1(c) et la discussion de fin de chapitre 3.
+
+---
+
+# Exercice 7 — Sur votre propre actif
+
+Reprendre les blocs de code des exercices 3 et 4 en remplaçant
+`"^FCHI"` par le symbole souhaité (`getSymbols`) : `"AAPL"`, `"^GSPC"`,
+`"BTC-USD"`, etc. Le squelette (import → rendements → test ARCH →
+estimation → comparaison AIC/BIC) ne change pas — c'est directement
+réutilisable pour le projet.
+
+---
+
+# Synthèse
+
+1. Les rendements financiers ont des queues épaisses et un effet ARCH.
+2. Les modèles GARCH capturent le regroupement de volatilité.
+3. GJR et EGARCH modélisent l'asymétrie (effet de levier).
+4. La validation passe par l'analyse des résidus standardisés.
+5. La VaR se calcule dynamiquement à partir d'un GARCH ; son
+   backtesting (Kupiec) évalue la qualité de calibration.
+
+**Pour aller plus loin** : GARCH multivarié (DCC — chapitre 4 et
+`03-TP/TP4-mgarch.qmd`), modèles à mémoire longue (FIGARCH),
+volatilité réalisée.

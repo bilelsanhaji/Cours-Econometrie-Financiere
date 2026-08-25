@@ -1,0 +1,71 @@
+# Configuration du dépôt.
+#
+# Deux modes de rendu pour les chapitres :
+#
+#   quarto render 01-Slides/CM3-garch.qmd
+#       → un fichier HTML UNIQUE, autonome, sans dépendance externe.
+#         C'est la version à projeter et à distribuer aux étudiants.
+#
+#   quarto render 01-Slides/CM3-garch.qmd --profile tableau
+#       → active le tableau blanc (annotation en direct sur les slides,
+#         touche B pour le tableau, C pour le stylo).
+#         Produit un HTML + un dossier `*_files/` : NE PAS distribuer,
+#         garder pour votre usage en salle.
+#
+# Le plugin chalkboard est incompatible avec `embed-resources`, d'où les
+# deux profils. Voir 01-Slides/README.md.
+#
+# Deux formats, un seul jeu de sources : le cours est donné à Paris 8
+# (36 h, CM+TD intégrés) et à l'UPEC/MASERATI de Créteil (18 h). Les
+# chapitres de 01-Slides couvrent tout au niveau de détail Paris 8 ; c'est
+# 06-Enseignant/deroule-*.qmd qui indique, pour chaque site, quelles plages
+# de slides et quelles fiches traiter à quel rythme. Voir 00-Syllabus/ pour
+# le détail : deux syllabus, un par site, les volumes horaires et les
+# modalités d'évaluation diffèrent.
+
+project:
+  title: "Économétrie Financière — M2"
+  # Tous les chunks s'exécutent depuis la racine du dépôt, quel que soit
+  # l'emplacement du document.
+  execute-dir: project
+  render:
+    - "00-Syllabus/*.qmd"
+    - "01-Slides/*.qmd"
+    - "00-Syllabus/etudiant/*.qmd"
+    - "01-Slides/etudiant/*.qmd"
+    - "01-Slides/notes/*.qmd"
+    - "02-TD/**/*.qmd"
+    - "03-TP/**/*.qmd"
+    - "05-Eval/**/*.qmd"
+    - "06-Enseignant/*.qmd"
+    - "!99-Archive/"
+    # Les README se lisent en Markdown : inutile de les rendre en HTML.
+    - "!**/README.md"
+    - "!*.md"
+
+format:
+  revealjs:
+    theme: [default, theme.scss]
+    # Les frames Beamer étaient séparées par des filets horizontaux, pas par
+    # des titres. slide-level 0 conserve ce découpage à l'identique : seuls
+    # les `---` créent une slide, les `#` et `##` restent des titres internes.
+    slide-level: 0
+    slide-number: c/t
+    show-slide-number: all
+    transition: none
+    width: 1280
+    height: 760
+    incremental: false
+    scrollable: true
+    code-line-numbers: false
+    embed-resources: true
+    chalkboard: false
+    html-math-method: mathjax
+
+# Libellés générés (table des matières, figures) en français
+lang: fr
+author: "Bilel Sanhaji"
+
+execute:
+  warning: false
+  message: false

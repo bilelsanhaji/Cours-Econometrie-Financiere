@@ -1,0 +1,66 @@
+---
+title: "Économétrie Financière"
+author: "Fiche TD #3"
+subtitle: "Modèles ARCH et GARCH — exercices sur papier"
+format: pdf
+---
+
+*Prépare le TP3 (estimation GARCH sur données réelles) et le projet.*
+
+---
+
+# Exercice 1 — Propriétés du modèle ARCH(1)
+
+Soit le modèle ARCH(1) :
+$$y_t = \mu + \varepsilon_t, \qquad \varepsilon_t = \sqrt{h_t}\, z_t, \quad z_t \sim \mathcal{N}(0,1)$$
+$$h_t = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2, \qquad \alpha_0 > 0,\ \alpha_1 \geq 0$$
+
+(a) Montrez que $\mathbb{E}_{t-1}(\varepsilon_t) = 0$ et $\mathbb{E}_{t-1}(\varepsilon_t^2) = h_t$.
+(b) En déduire la loi conditionnelle de $\varepsilon_t$ sachant l'information en $t-1$.
+(c) Sous quelle condition sur $\alpha_1$ la variance **non conditionnelle** $\mathbb{V}(\varepsilon_t)$ existe-t-elle ? Donnez son expression.
+(d) Expliquez, sans calcul, en quoi ce modèle permet de représenter le *clustering* de volatilité observé sur les rendements financiers.
+
+---
+
+# Exercice 2 — Du GARCH(1,1) à l'ARCH($\infty$)
+
+Soit le modèle GARCH(1,1) :
+$$h_t = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2 + \beta_1 h_{t-1}$$
+
+(a) En substituant récursivement $h_{t-1}, h_{t-2}, \dots$, montrez que $h_t$ peut s'écrire comme une combinaison infinie des $\varepsilon_{t-i}^2$ passés, pondérés par $\beta_1^{\,i}$.
+(b) Sous quelle condition sur $\alpha_1$ et $\beta_1$ cette écriture est-elle bien définie (poids sommables) ?
+(c) Que devient cette condition dans le cas particulier $\alpha_1 + \beta_1 = 1$ ? Comment appelle-t-on le modèle correspondant, et que peut-on dire de la persistance des chocs sur la variance ?
+
+---
+
+# Exercice 3 — Stationnarité et variance non conditionnelle
+
+Pour le GARCH(1,1) de l'exercice 2 :
+
+(a) Rappelez la condition de stationnarité en covariance des $\varepsilon_t$.
+(b) Sous cette condition, calculez $\mathbb{V}(\varepsilon_t)$ en fonction de $\alpha_0, \alpha_1, \beta_1$.
+(c) Deux modèles ont été estimés sur le même actif : $(\widehat\alpha_0, \widehat\alpha_1, \widehat\beta_1) = (0{,}02,\ 0{,}05,\ 0{,}94)$ et $(0{,}05,\ 0{,}15,\ 0{,}80)$. Calculez la variance non conditionnelle implicite de chacun, et commentez la différence de persistance ($\widehat\alpha_1+\widehat\beta_1$) entre les deux.
+
+---
+
+# Exercice 4 — Asymétrie et *News Impact Curve*
+
+On considère un GJR-GARCH(1,1) :
+$$h_t = \alpha_0 + \gamma_1 \varepsilon_{t-1}^2 + \beta_1 h_{t-1} + \varphi_1 D_{t-1}\varepsilon_{t-1}^2, \qquad D_{t-1} = \mathbb{1}_{\varepsilon_{t-1}\leq 0}$$
+
+(a) Écrivez la *News Impact Curve* $\text{NIC}(\varepsilon_t)$ associée, séparément pour $\varepsilon_t \leq 0$ et $\varepsilon_t > 0$.
+(b) Un choc négatif et un choc positif de même ampleur $|\varepsilon_t|$ ont-ils le même effet sur $h_{t+1}$ ? Sous quelle condition sur $\varphi_1$ le choc négatif domine-t-il ?
+(c) Un GARCH(1,1) symétrique standard est un cas particulier du GJR — pour quelle valeur de $\varphi_1$ ? Justifiez à partir de la NIC.
+(d) Sur le même graphique (à main levée), esquissez l'allure de la NIC pour un GARCH standard et pour un GJR avec $\varphi_1 > 0$. Que change l'EGARCH par rapport au GJR dans la façon de représenter cette asymétrie (sans calcul, une phrase suffit) ?
+
+---
+
+# Exercice 5 — Test d'effet ARCH, à la main
+
+Sur $T = 250$ observations de rendements quotidiens, la régression auxiliaire
+$$\widehat\varepsilon_t^2 = \widehat\alpha_0 + \widehat\alpha_1 \widehat\varepsilon_{t-1}^2 + \widehat\alpha_2 \widehat\varepsilon_{t-2}^2 + u_t$$
+donne un $R^2 = 0{,}084$.
+
+(a) Rappelez $H_0$ et $H_1$ du test d'Engle (1982) dans ce contexte, et la statistique de test.
+(b) Calculez la statistique et concluez au seuil de 5 % (valeur critique du $\chi^2_2$ à 5 % : $5{,}99$).
+(c) Ce test rejeté, que peut-on conclure — et que ne peut-on **pas** encore conclure — sur le choix du modèle de volatilité à utiliser ?

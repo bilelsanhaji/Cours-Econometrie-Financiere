@@ -1,0 +1,141 @@
+---
+title: "Économétrie Financière"
+author: "Corrigé — Fiche TD #4"
+subtitle: "GARCH multivarié — exercices sur papier"
+format: pdf
+---
+
+---
+
+# Exercice 1 — Compter les paramètres
+
+**(a)** $N=2$ : $N(N+1)/2=3$, donc $3\times3=9$ ✓.
+$N=3$ : $N(N+1)/2=6$, donc $3\times6=18$ ✓.
+
+**(b)** $N=4$ : $N(N+1)/2=10$, DVEC $=3\times10=30$ (contre 210 pour le
+VEC général, 42 pour le BEKK). $N=5$ : $N(N+1)/2=15$, DVEC $=3\times15=45$
+(contre 465 pour le VEC général, 65 pour le BEKK).
+
+**(c)** Pour $N=10$ : le VEC général ($O(N^4)$) est totalement
+impraticable — de l'ordre de plusieurs milliers de paramètres. Un DVEC
+($O(N^2)$, ici $3\times55=165$) reste déjà lourd sur des échantillons
+financiers usuels. Seul un BEKK **scalaire** ou un DCC **scalaire**
+(nombre de paramètres $O(1)$ pour la dynamique, plus $N$ équations
+GARCH univariées indépendantes) reste raisonnablement estimable.
+
+---
+
+# Exercice 2 — Stationnarité d'un BEKK scalaire
+
+**(a)** Condition de stationnarité faible : $\alpha+\gamma<1$.
+
+**(b)** Modèle A : $0{,}05+0{,}90=0{,}95<1$ — **stationnaire**. Modèle B :
+$0{,}08+0{,}95=1{,}03\geq1$ — **non stationnaire** (analogue
+multivarié d'un IGARCH).
+
+**(c)** Pour le modèle A (stationnaire), par analogie avec le
+GARCH(1,1) univarié : la persistance $\widehat\alpha+\widehat\gamma=0{,}95$
+est élevée mais $<1$ — un choc sur la matrice de covariance conditionnelle
+finit par s'effacer, mais lentement (demi-vie longue). Pour le modèle B,
+un choc sur $\mathbf H_t$ **ne s'efface jamais** : la variance
+non conditionnelle $\mathbf H=\mathbb E(\mathbf H_t)$ n'existe pas.
+
+---
+
+# Exercice 3 — Récursion DCC, à la main
+
+**(a)** $$\mathbf u_{t-1}\mathbf u_{t-1}' = \begin{pmatrix}0{,}25 & -0{,}15\\-0{,}15 & 0{,}09\end{pmatrix}$$
+
+**(b)** $1-\theta_1-\theta_2 = 1-0{,}03-0{,}95=0{,}02$.
+$$
+\mathbf Q_t = 0{,}02\begin{pmatrix}1&0{,}3\\0{,}3&1\end{pmatrix}
++ 0{,}03\begin{pmatrix}0{,}25&-0{,}15\\-0{,}15&0{,}09\end{pmatrix}
++ 0{,}95\begin{pmatrix}1{,}02&0{,}28\\0{,}28&0{,}98\end{pmatrix}
+$$
+$$
+= \begin{pmatrix}0{,}020&0{,}006\\0{,}006&0{,}020\end{pmatrix}
++ \begin{pmatrix}0{,}0075&-0{,}0045\\-0{,}0045&0{,}0027\end{pmatrix}
++ \begin{pmatrix}0{,}969&0{,}266\\0{,}266&0{,}931\end{pmatrix}
+= \begin{pmatrix}0{,}9965 & 0{,}2675\\0{,}2675 & 0{,}9537\end{pmatrix}
+$$
+
+**(c)** Non : sa diagonale n'est pas $(1,1)$ mais $(0{,}9965;\,0{,}9537)$
+— $\mathbf Q_t$ n'est **pas** une matrice de corrélation par
+construction, seulement une étape intermédiaire.
+
+**(d)** $\sqrt{0{,}9965}=0{,}99825$, $\sqrt{0{,}9537}=0{,}97658$ :
+$$\rho_{12,t} = \frac{0{,}2675}{0{,}99825\times0{,}97658} = \frac{0{,}2675}{0{,}97488} \approx 0{,}274$$
+$$\mathbf R_t \approx \begin{pmatrix}1 & 0{,}274\\0{,}274 & 1\end{pmatrix}$$
+
+---
+
+# Exercice 4 — CCC comme cas particulier du DCC
+
+**(a)** Si $\theta_1=\theta_2=0$ : $\mathbf Q_t = \overline{\mathbf Q}$
+pour tout $t$ — constante. Si de plus $\overline q_{ii}=1$ pour tout
+$i$, alors $\mathbf R_t=\overline{\mathbf Q}=\mathbf R$ constante :
+exactement le modèle **CCC**.
+
+**(b)** Le CCC correspond exactement à la restriction $H_0:
+\theta_1=\theta_2=0$ dans le DCC : c'est un test emboîté standard (test
+de Wald ou du rapport de vraisemblance sur ces deux paramètres), ce qui
+permet de **trancher statistiquement** entre les deux spécifications
+plutôt que de choisir arbitrairement.
+
+**(c)** Non : $\theta_2$ élevé signifie que $\mathbf Q_t$ (et donc
+$\mathbf R_t$) dépend fortement de son propre passé — la dynamique des
+corrélations est **persistante**, pas absente. Un $\theta_1$ proche de 0
+indique seulement que le **choc récent** ($\mathbf u_{t-1}\mathbf u_{t-1}'$)
+pèse peu par rapport à l'inertie ($\theta_2$) — mais la corrélation
+reste bien **variable dans le temps**, contrairement à l'hypothèse CCC.
+
+---
+
+# Exercice 5 — Estimation en deux étapes
+
+**(a)** Étape 1 : estimer $\theta_V$ (paramètres des équations de
+variance individuelles, dans $\mathbf D_t$) en maximisant $Q1L_T(\theta_V)$.
+Étape 2 : à $\widehat\theta_V$ fixé, estimer $\theta_R$ (paramètres de
+corrélation, $\theta_1,\theta_2,\overline{\mathbf Q}$) en maximisant
+$Q2L_T(\widehat\theta_V,\theta_R)$.
+
+**(b)** Sans terme de contagion, $Q1L_T(\theta_V)$ se décompose en $N$
+fonctions indépendantes, une par actif : l'étape 1 revient exactement à
+estimer **$N$ modèles GARCH univariés séparés**, chacun exactement
+comme au chapitre 3.
+
+**(c)** Non : l'estimateur en deux étapes est **consistant mais non
+efficace asymptotiquement**, car une partie de l'information (sur
+$\theta_V$) est « sacrifiée » à l'étape 1 sans être réexploitée à
+l'étape 2. Conséquence pratique : les écarts-types de
+$\widehat\theta_R$ obtenus naïvement à l'étape 2 doivent être corrigés
+pour tenir compte de l'incertitude propagée depuis l'étape 1 — sinon
+l'inférence (tests, intervalles de confiance) sur $\theta_R$ est biaisée,
+même si les points estimés restent valides.
+
+---
+
+# Exercice 6 — Test de Kupiec, à la main
+
+**(a)** $\widehat\pi=20/250=8\%$, contre un taux théorique $\alpha=5\%$
+(soit $12{,}5$ violations attendues) — près de deux fois plus de
+violations qu'attendu.
+
+**(b)** $\ln\big[(0{,}95)^{230}(0{,}05)^{20}\big] = 230\ln(0{,}95)+20\ln(0{,}05)
+\approx -11{,}794-59{,}915=-71{,}709$.
+$\ln\big[(0{,}92)^{230}(0{,}08)^{20}\big]=230\ln(0{,}92)+20\ln(0{,}08)
+\approx-19{,}185-50{,}524=-69{,}709$.
+$$LR_{uc}=-2(-71{,}709)-\big(-2(-69{,}709)\big)=143{,}418-139{,}418\approx4{,}04$$
+
+**(c)** $LR_{uc}\approx4{,}04>3{,}841$ : on **rejette** $H_0$ à 95 % — le
+modèle n'est **pas** bien calibré. Comme $\widehat\pi>\alpha$, l'erreur
+va dans le sens d'une VaR **pas assez conservatrice** (trop de pertes
+dépassent le seuil annoncé ; le risque est sous-estimé).
+
+**(d)** Avec $N=13$ : $\widehat\pi=13/250=5{,}2\%$, très proche de
+$5\%$. Le calcul donne $LR_{uc}\approx0{,}02\ll3{,}841$ : on ne rejette
+**pas** $H_0$ — le modèle est bien calibré. La conclusion change
+radicalement pour une différence de seulement 7 violations sur 250
+jours : le test de Kupiec est sensible, ce qui justifie de toujours
+l'accompagner d'un test de Christoffersen avant de statuer définitivement
+sur un modèle de VaR.

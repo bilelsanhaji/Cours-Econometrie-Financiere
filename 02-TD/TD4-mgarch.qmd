@@ -1,0 +1,105 @@
+---
+title: "Économétrie Financière"
+author: "Fiche TD #4"
+subtitle: "GARCH multivarié — exercices sur papier"
+format: pdf
+---
+
+*Prépare le TP4 (estimation d'un DCC sur un petit portefeuille).*
+
+---
+
+# Exercice 1 — Compter les paramètres
+
+Le cours donne, pour le VEC(1,1) général et le BEKK(1,1,1), le nombre de
+paramètres pour $N=2,\dots,5$ : VEC — 21, 78, 210, 465 ; BEKK — 11, 24,
+42, 65. Le DVEC (VEC diagonal) compte $3\times N(N+1)/2$ paramètres.
+
+(a) Vérifiez la formule du DVEC pour $N=2$ ($9$ paramètres annoncés en
+    cours) et $N=3$ ($18$ paramètres annoncés).
+(b) Calculez le nombre de paramètres d'un DVEC pour $N=4$ et $N=5$.
+    Comparez à ceux du VEC général et du BEKK pour les mêmes
+    dimensions.
+(c) Pour $N=10$, le VEC général est-il praticable en estimation ? Un
+    DVEC ou un BEKK scalaire ? Justifiez à partir de l'ordre de
+    grandeur du nombre de paramètres ($O(N^4)$ pour le VEC général,
+    $O(N^2)$ pour DVEC, $O(1)$ pour un modèle scalaire).
+
+---
+
+# Exercice 2 — Stationnarité d'un BEKK scalaire
+
+Deux BEKK scalaires ont été estimés sur des paires d'actifs différentes :
+$$\mathbf H_t = \boldsymbol\Omega + \alpha\,\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}' + \gamma\,\mathbf H_{t-1}$$
+Modèle A : $\widehat\alpha=0{,}05$, $\widehat\gamma=0{,}90$. Modèle B :
+$\widehat\alpha=0{,}08$, $\widehat\gamma=0{,}95$.
+
+(a) Rappelez la condition de stationnarité (faible) d'un BEKK scalaire.
+(b) Les deux modèles sont-ils stationnaires ? Commentez.
+(c) Pour le modèle stationnaire, que peut-on dire de la persistance des
+    chocs sur la matrice de covariance conditionnelle, par analogie avec
+    le GARCH(1,1) univarié du chapitre 3 ?
+
+---
+
+# Exercice 3 — Récursion DCC, à la main
+
+On dispose, à la date $t-1$, de $\mathbf Q_{t-1} = \begin{pmatrix}1{,}02 & 0{,}28\\0{,}28 & 0{,}98\end{pmatrix}$,
+d'un vecteur de résidus standardisés $\mathbf u_{t-1} = (0{,}5,\,-0{,}3)'$,
+et d'une cible $\overline{\mathbf Q} = \begin{pmatrix}1 & 0{,}3\\0{,}3 & 1\end{pmatrix}$.
+Les paramètres estimés du DCC(1,1) sont $\widehat\theta_1=0{,}03$,
+$\widehat\theta_2=0{,}95$.
+
+(a) Calculez $\mathbf u_{t-1}\mathbf u_{t-1}'$.
+(b) Calculez $\mathbf Q_t = (1-\theta_1-\theta_2)\overline{\mathbf Q} + \theta_1\mathbf u_{t-1}\mathbf u_{t-1}' + \theta_2\mathbf Q_{t-1}$.
+(c) $\mathbf Q_t$ est-elle une matrice de corrélation ? Justifiez à
+    partir de sa diagonale.
+(d) Calculez $\mathbf R_t = (\mathrm{Diag}\,\mathbf Q_t)^{-1/2}\mathbf Q_t(\mathrm{Diag}\,\mathbf Q_t)^{-1/2}$
+    et donnez la corrélation conditionnelle $\rho_{12,t}$.
+
+---
+
+# Exercice 4 — CCC comme cas particulier du DCC
+
+(a) Que devient la récursion $\mathbf Q_t = (1-\theta_1-\theta_2)\overline{\mathbf Q}+\theta_1\mathbf u_{t-1}\mathbf u_{t-1}'+\theta_2\mathbf Q_{t-1}$
+    quand $\theta_1=\theta_2=0$ ?
+(b) En déduire pourquoi le CCC est un cas particulier **testable** du
+    DCC (sur quels paramètres porterait le test, et quelle est
+    l'hypothèse nulle) ?
+(c) À l'inverse, un DCC avec $\widehat\theta_1$ très proche de 0 mais
+    $\widehat\theta_2$ élevé serait-il pertinent à modéliser comme un
+    CCC ? Justifiez.
+
+---
+
+# Exercice 5 — Estimation en deux étapes
+
+On estime un DCC bivarié sur les rendements de deux actifs.
+
+(a) Décrivez les deux étapes de l'estimation (quels paramètres à
+    chaque étape, sur quelle fonction objectif).
+(b) Si les deux équations de variance individuelles ($h_{11t}$,
+    $h_{22t}$) n'ont pas de terme de contagion croisée, à quoi
+    l'étape 1 se ramène-t-elle concrètement ? Reliez votre réponse au
+    chapitre 3.
+(c) L'estimateur en deux étapes est-il efficace asymptotiquement ?
+    Justifiez, et indiquez une conséquence pratique de cette propriété
+    pour l'interprétation des écarts-types de $\widehat\theta_R$.
+
+---
+
+# Exercice 6 — Test de Kupiec, à la main
+
+Un modèle de VaR de portefeuille à 5 % ($\alpha=0{,}05$) est backtesté
+sur $T=250$ jours de bourse. On observe $N=20$ violations
+($r_{p,t}<\text{VaR}_{p,t}$).
+
+(a) Calculez le taux de violation observé $\widehat\pi=N/T$ et comparez-le
+    au taux théorique $\alpha$.
+(b) Calculez la statistique de Kupiec
+    $LR_{uc}=-2\ln\!\big[(1-\alpha)^{T-N}\alpha^{N}\big]+2\ln\!\big[(1-\widehat\pi)^{T-N}\widehat\pi^{N}\big]$.
+(c) Au seuil de 95 % ($\chi^2_{1,95\%}=3{,}841$), concluez-vous à une
+    bonne calibration du modèle ? Dans quel sens l'erreur de calibration
+    va-t-elle (VaR trop conservatrice ou pas assez) ?
+(d) Reprenez le calcul avec $N=13$ violations au lieu de 20 (toutes
+    choses égales par ailleurs). La conclusion change-t-elle ?

@@ -1,0 +1,42 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# macOS
+.DS_Store
+
+# Quarto
+/.quarto/
+*_cache/
+*_files/
+etudiant/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+
+# Python
+__pycache__/
+.venv/
+
+# Sources originales (matériaux bruts pré-conversion, non publiés sur GitHub)
+# Voir 99-Archive/LISEZ-MOI.md pour le détail de ce qui a été repris.
+99-Archive/sources-originales/
+
+# Rendus Quarto (HTML/PDF) — reproductibles depuis les .qmd via `quarto
+# render`, pas versionnés (évite de committer des HTML autoportants lourds)
+01-Slides/*.html
+00-Syllabus/*.html
+02-TD/*.pdf
+02-TD/corriges/*.html
+03-TP/*.pdf
+03-TP/corriges/*.html
+06-Enseignant/*.pdf

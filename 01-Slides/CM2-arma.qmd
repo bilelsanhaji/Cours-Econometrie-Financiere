@@ -1,0 +1,533 @@
+---
+title: "Chapitre 2 — Processus ARMA"
+subtitle: "Économétrie Financière · M2"
+# Configuration commune (thème, tableau blanc, découpage) : _quarto.yml à la racine
+format:
+  revealjs:
+    footer: "Économétrie Financière — Chapitre 2"
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  fig.width = 10,
+  fig.height = 5,
+  dpi = 192,
+  fig.keep = "last",
+  message = FALSE,
+  warning = FALSE,
+  results = "markup"
+)
+```
+
+**Objectifs du chapitre**
+
+- Maîtriser le vocabulaire des séries temporelles (stationnarité, ergodicité, processus intégrés)
+- Construire et caractériser (moments, ACF, PACF) les processus AR, MA et ARMA
+- Estimer un ARMA, sélectionner son ordre, valider sa spécification
+- Reconnaître les limites du modèle ARMA — la variance conditionnelle constante — qui motivent le chapitre 3
+
+::: {.notes}
+**Ouverture.** Ce chapitre modélise la **moyenne** conditionnelle des
+rendements. Le chapitre 3 modélisera leur **variance** conditionnelle —
+faire le lien explicitement : un ARMA suppose $\mathbb V_t(\varepsilon_{t+1})$
+constante, exactement l'hypothèse que le chapitre 3 va lever.
+
+La partie applicative (import de données, identification, estimation,
+diagnostic sous `R`) est entièrement dans
+`03-TP/TP2-arma.qmd` — ce chapitre ne montre aucun code.
+:::
+
+------------------------------------------------------------------------
+
+# Introduction
+
+## Séries temporelles et processus stochastiques
+
+::: {.definition}
+Une **série temporelle** $\{y_t\}_{t=1}^T$ est la réalisation, de
+dimension finie, d'un **processus stochastique** $\{y_t(\omega),\,
+\omega\in\Omega,\, t\in\mathbb T\}$ — une suite ordonnée de variables
+aléatoires.
+:::
+
+But de l'analyse : formuler un modèle statistique **congruent** avec le
+processus (inconnu) qui a généré la série observée. Approche
+**conditionnelle** — décomposition prévision-erreur :
+$$y_t = \mathbb E[y_t \mid Y_{t-1}] + \varepsilon_t$$
+où $\mathbb E[y_t\mid Y_{t-1}]$ est la partie prévisible, $\varepsilon_t$
+l'information imprévisible (l'innovation).
+
+------------------------------------------------------------------------
+
+## Stationnarité
+
+::: {.definition}
+$\{y_t\}$ est **stationnaire au sens faible** (ou d'ordre 2) si ses deux
+premiers moments existent et ne dépendent pas de $t$ :
+$$\mathbb E[y_t]=\mu<\infty, \qquad \mathbb E[(y_t-\mu)(y_{t-h}-\mu)]=\gamma(h) \quad \forall t,h$$
+
+$\{y_t\}$ est **strictement stationnaire** si la distribution jointe de
+$(y_t,y_{t+h_1},\dots,y_{t+h_n})$ ne dépend que des écarts $h_i$, jamais
+de $t$.
+:::
+
+::: {.retenir}
+Pour un processus **gaussien**, stationnarité faible $\Leftrightarrow$
+stationnarité stricte. C'est l'hypothèse de travail par défaut de ce
+chapitre comme du chapitre 3.
+:::
+
+------------------------------------------------------------------------
+
+## Ergodicité
+
+::: {.definition}
+$\{y_t\}$ stationnaire est **ergodique pour la moyenne** si
+$\overline y_T = T^{-1}\sum_t y_t \xrightarrow{p} \mu$ quand $T\to\infty$.
+:::
+
+::: {.piege}
+Stationnarité et ergodicité sont **deux notions distinctes**. Exemple :
+$y_t = u_0$ pour tout $t\geq0$, $u_0\sim\mathcal N(0,\sigma^2)$ — ce
+processus est stationnaire ($\mu=0$, $\gamma(h)=\sigma^2$ indépendants
+de $t$) mais **non ergodique** : $\overline y_T = u_0$ pour tout $T$, ne
+converge jamais vers $0$.
+:::
+
+Condition suffisante d'ergodicité pour un processus stationnaire :
+sommabilité absolue des autocovariances, $\sum_h |\gamma(h)| <\infty$.
+C'est l'ergodicité qui autorise, en pratique, à caractériser un
+processus par ses moments **empiriques** (moyenne, ACF, PACF).
+
+------------------------------------------------------------------------
+
+## Processus intégrés
+
+::: {.definition}
+Un processus est **intégré d'ordre $d$**, noté $\mathsf I(d)$, s'il faut
+le différencier $d$ fois pour le rendre stationnaire. Un processus
+stationnaire est $\mathsf I(0)$.
+:::
+
+**Marche aléatoire** : $y_t = y_{t-1}+u_t$, $u_t\sim\text{i.i.d.}(0,\sigma^2)$,
+$y_0=0$ — c'est un $\mathsf I(1)$ typique :
+$$\mathbb E(y_t)=0, \qquad \mathbb V(y_t) = t\sigma^2 \; (\text{diverge avec } t), \qquad
+\rho_t(h)^2 = 1-\frac ht$$
+
+::: {.retenir}
+Signature empirique : l'ACF d'une série $\mathsf I(1)$ décroît très
+lentement (quasi linéairement), alors que celle d'une série
+stationnaire oscille autour de 0. La PACF d'une $\mathsf I(1)$ a un
+premier coefficient proche de 1, puis chute — signature utile pour
+repérer visuellement une non-stationnarité avant tout test formel.
+:::
+
+------------------------------------------------------------------------
+
+## Bruit blanc et IID
+
+::: {.definition}
+$\{u_t\}$ est un **bruit blanc**, $u_t\sim\mathsf{WN}(0,\sigma^2)$, si
+$\mathbb E(u_t)=0$, $\mathbb V(u_t)=\sigma^2<\infty$, et $u_t, u_{t-h}$
+non corrélés pour $h\neq0$. S'il est de plus gaussien :
+$u_t\sim\mathsf{NID}(0,\sigma^2)$ — non-corrélation $\Leftrightarrow$
+indépendance.
+:::
+
+Généralisation : $u_t \sim \mathsf{IID}(\mu,\sigma^2)$ — composantes
+indépendantes et identiquement distribuées, moments d'ordre supérieur
+non précisés.
+
+::: {.question}
+Un bruit blanc est-il nécessairement i.i.d. ? *(Non — seule la
+non-corrélation est requise ; l'indépendance complète, plus forte,
+n'est garantie que sous normalité ou avec l'hypothèse IID
+explicite.)*
+:::
+
+------------------------------------------------------------------------
+
+## Filtre linéaire et décomposition de Wold
+
+**Filtre linéaire** : $y_t = A(L)x_t = \sum_j a_j x_{t-j}$.
+
+::: {.definition}
+**Décomposition de Wold** : tout processus stationnaire de covariance,
+à moyenne nulle, se représente
+$$y_t = \sum_{j=0}^{\infty}\psi_j\varepsilon_{t-j} + \kappa_t, \qquad \psi_0=1,\ \sum_j\psi_j^2<\infty$$
+avec $\varepsilon_t \equiv y_t - \widehat{\mathbb E}(y_t\mid Y_{t-1})$
+l'erreur de prévision linéaire, et $\kappa_t$ une composante
+déterministe (parfaitement prévisible).
+:::
+
+**Approche de Box-Jenkins** : approximer $\Psi(L)=\sum_j\psi_jL^j$ par un
+rapport de deux polynômes de degré fini :
+$$\Psi(L) \simeq \frac{\beta(L)}{\alpha(L)} = \frac{1+\beta_1L+\dots+\beta_qL^q}{1-\alpha_1L-\dots-\alpha_pL^p}$$
+
+| Type | Modèle | $p$ | $q$ |
+|---|---|---|---|
+| AR($p$) | $\alpha(L)y_t=\varepsilon_t$ | $>0$ | $0$ |
+| MA($q$) | $y_t=\beta(L)\varepsilon_t$ | $0$ | $>0$ |
+| ARMA($p,q$) | $\alpha(L)y_t=\beta(L)\varepsilon_t$ | $>0$ | $>0$ |
+
+------------------------------------------------------------------------
+
+# Processus autorégressifs
+
+## AR(1) : définition et moments
+
+::: {.definition}
+$$y_t = \nu + \varphi y_{t-1} + \varepsilon_t, \qquad \varepsilon_t\sim\mathsf{WN}(0,\sigma^2)$$
+:::
+
+Si $|\varphi|<1$ (stationnarité), représentation MA($\infty$) par
+substitution récursive :
+$$y_t = \frac{\nu}{1-\varphi} + \sum_{j=0}^{\infty}\varphi^j\varepsilon_{t-j}$$
+
+$$\mathbb E(y_t) = \frac{\nu}{1-\varphi} = \mu, \qquad
+\mathbb V(y_t) = \gamma(0) = \frac{\sigma^2}{1-\varphi^2}$$
+
+------------------------------------------------------------------------
+
+### Autocovariance, autocorrélation
+
+$$\gamma(h) = \varphi\,\gamma(h-1) = \varphi^h\gamma(0), \qquad
+\rho(h) = \varphi^h, \qquad h\neq0$$
+
+::: {.retenir}
+$\varphi = \mathsf{Corr}(y_t,y_{t-1})$ : c'est directement le coefficient
+de corrélation entre deux dates consécutives.
+:::
+
+**Caractérisation ACF/PACF d'un AR(1)** :
+
+- ACF : décroissance **exponentielle** si $\varphi>0$, **sinusoïde
+  amortie** si $\varphi<0$.
+- PACF : un seul coefficient non nul (au retard 1, de signe celui de
+  $\varphi$), puis nulle.
+
+------------------------------------------------------------------------
+
+### Cas limites
+
+- $\varphi=0$ : bruit blanc, imprévisible.
+- $|\varphi|<1$ : stable, oscille autour de $\mu$ — cas stationnaire.
+- $|\varphi|=1$ : marche aléatoire, **non stationnaire** ($\mathsf I(1)$).
+- $|\varphi|>1$ : **explosif**.
+
+::: {.piege}
+Un $\varphi$ estimé très proche de 1 (par exemple $\widehat\varphi=0{,}97$)
+ne prouve pas la stationnarité : c'est le signe d'une **forte
+persistance**, à confirmer ou infirmer par un test formel de racine
+unitaire (ADF, KPSS) — voir TP2.
+:::
+
+------------------------------------------------------------------------
+
+## AR(2) : stationnarité
+
+::: {.definition}
+$$y_t = \nu + \varphi_1 y_{t-1} + \varphi_2 y_{t-2} + \varepsilon_t$$
+
+Conditions de stationnarité (triangle de stationnarité) :
+$$\varphi_1+\varphi_2 < 1, \qquad \varphi_2-\varphi_1<1, \qquad |\varphi_2|<1$$
+:::
+
+Racines complexes (comportement pseudo-cyclique) si $\varphi_1^2+4\varphi_2<0$.
+
+**Équations de Yule-Walker** :
+$$\rho(1) = \varphi_1+\varphi_2\rho(1), \qquad \rho(2) = \varphi_1\rho(1)+\varphi_2$$
+
+::: {.notes}
+Le triangle de stationnarité dans le plan $(\varphi_1,\varphi_2)$ se
+prête bien à un dessin au tableau — utile pour visualiser la frontière
+racines réelles / racines complexes.
+:::
+
+------------------------------------------------------------------------
+
+## AR($p$) et équations de Yule-Walker générales
+
+$$y_t = \nu + \sum_{j=1}^p \varphi_j y_{t-j} + \varepsilon_t$$
+
+**Stabilité** : les racines de $\alpha(z)=1-\varphi_1z-\dots-\varphi_pz^p=0$
+sont toutes $|z|>1$ $\Rightarrow$ stationnarité, représentation MA($\infty$)
+avec $\sum_j|\psi_j|<\infty$.
+
+Système de Yule-Walker (pour $\rho(1),\dots,\rho(p)$, puis récursion pour
+$k>p$) :
+$$\rho(k) = \varphi_1\rho(k-1)+\dots+\varphi_p\rho(k-p)$$
+
+::: {.retenir}
+**Signature ACF/PACF d'un AR($p$)** : ACF décroît de façon exponentielle
+(ou sinusoïdale amortie), PACF nulle après le retard $p$ — c'est ce
+second critère qui identifie l'ordre $p$ en pratique.
+:::
+
+------------------------------------------------------------------------
+
+# Processus de moyenne mobile
+
+## MA($q$) : définition et moments
+
+::: {.definition}
+$$y_t = \mu + \varepsilon_t + \sum_{i=1}^q \beta_i\varepsilon_{t-i}, \qquad \varepsilon_t\sim\mathsf{WN}(0,\sigma^2)$$
+:::
+
+**Toujours stationnaire**, quels que soient les $\beta_i$.
+
+$$\gamma(0) = \Big(1+\sum_{i=1}^q\beta_i^2\Big)\sigma^2, \qquad
+\gamma(k) = \sigma^2\sum_{j=0}^{q-k}\beta_j\beta_{j+k} \; (1\leq k\leq q), \qquad
+\gamma(k)=0 \; (k>q)$$
+
+::: {.retenir}
+**Signature ACF/PACF d'un MA($q$)** : ACF **s'annule après le retard $q$**
+(coupure nette), PACF décroît exponentiellement (ou sinusoïde amortie) —
+c'est l'exact miroir du couple AR/MA en termes d'ACF et de PACF.
+:::
+
+------------------------------------------------------------------------
+
+### Inversibilité
+
+::: {.definition}
+Les racines de $\beta(z)=1+\beta_1z+\dots+\beta_qz^q=0$ toutes $|z|>1$
+$\Rightarrow$ **inversibilité** : représentation AR($\infty$)
+$$y_t = \mu + \sum_{j=1}^{\infty}\phi_j(y_{t-j}-\mu) + \varepsilon_t$$
+:::
+
+::: {.piege}
+Un MA(1), $y_t=\varepsilon_t+\beta\varepsilon_{t-1}$, a la même fonction
+d'autocorrélation pour $\beta$ et $1/\beta$ : sans la condition
+d'inversibilité ($|\beta|<1$), le modèle n'est pas identifié de façon
+unique à partir des seconds moments.
+:::
+
+------------------------------------------------------------------------
+
+# Processus ARMA($p,q$)
+
+## Définition et conditions
+
+$$\alpha(L)y_t = \nu + \beta(L)\varepsilon_t, \qquad
+\alpha(L)=1-\varphi_1L-\dots-\varphi_pL^p, \quad \beta(L)=1+\beta_1L+\dots+\beta_qL^q$$
+
+::: {.definition}
+Trois conditions pour une représentation ARMA($p,q$) **minimale** et
+bien définie :
+
+1. **Stabilité** : racines de $\alpha(z)$ toutes $|z|>1$ $\to$ forme MA($\infty$).
+2. **Inversibilité** : racines de $\beta(z)$ toutes $|z|>1$ $\to$ forme AR($\infty$).
+3. **Pas de racine commune** entre $\alpha(L)$ et $\beta(L)$.
+:::
+
+::: {.piege}
+Une racine commune à $\alpha(L)$ et $\beta(L)$ produit une
+**sur-paramétrisation** : les deux facteurs se simplifient et le modèle
+« vrai » est d'ordre inférieur — piège classique de l'estimation
+automatique (`auto.arima`) sur un ordre mal choisi.
+:::
+
+------------------------------------------------------------------------
+
+## ARMA(1,1) : exemple complet
+
+$$y_t - \varphi y_{t-1} = \varepsilon_t + \beta\varepsilon_{t-1}, \qquad |\varphi|<1,\ |\beta|<1$$
+
+$$\rho(1) = \frac{(1+\varphi\beta)(\varphi+\beta)}{1+\beta^2+2\varphi\beta}, \qquad
+\rho(h) = \varphi^{h-1}\rho(1) \quad (h\geq2)$$
+
+::: {.retenir}
+**Signature ACF/PACF d'un ARMA($p,q$)** : ni coupure nette ni
+décroissance à partir du premier retard sur l'un ou l'autre — les
+**deux** décroissent de façon exponentielle (ou sinusoïdale amortie),
+sans annulation brutale. C'est ce profil mixte qui, en pratique, signale
+la nécessité d'un ARMA plutôt qu'un AR ou un MA pur.
+:::
+
+------------------------------------------------------------------------
+
+## Extension multivariée : VAR(1) *(Paris 8)*
+
+Ce qui est vrai dans le cadre univarié se généralise au cadre
+multivarié : $y_t$ devient un vecteur $\mathbf y_t$, les paramètres des
+matrices.
+
+::: {.definition}
+**VAR(1)** :
+$$\mathbf y_t = \mathbf A\, \mathbf y_{t-1} + \boldsymbol\varepsilon_t, \qquad
+\boldsymbol\varepsilon_t \sim \mathsf{WN}(\mathbf 0, \boldsymbol\Sigma)$$
+:::
+
+**ADL (Autoregressive Distributed Lags)** — cas particulier utile pour
+la causalité :
+$$y_{1,t} = \alpha_{11}y_{1,t-1} + \alpha_{12}y_{2,t-1} + \varepsilon_{1t}$$
+Si $\alpha_{12}\neq0$, $y_{2,t-1}$ « cause » (au sens de Granger)
+$y_{1,t}$.
+
+::: {.notes}
+Le VARMA multivarié n'est pas développé davantage dans ce cours : la
+généralisation matricielle des conditions de stationnarité/inversibilité
+suit le même principe qu'en univarié, mais la charge de calcul dépasse
+le cadre des deux formats. Le chapitre 4 (GARCH multivarié) reprend
+cette même logique d'extension matricielle pour la **variance**
+conditionnelle plutôt que pour la moyenne.
+:::
+
+------------------------------------------------------------------------
+
+# Estimation
+
+## Vraisemblance conditionnelle (cas AR(1))
+
+Sous normalité conditionnelle, $(y_t\mid y_{t-1}) \sim
+\mathcal N(\nu+\varphi y_{t-1}, \sigma^2)$ :
+
+$$L(y_1,\dots,y_T\mid y_0;\nu,\varphi,\sigma^2) = (2\pi\sigma^2)^{-T/2}
+\exp\left(-\frac1{2\sigma^2}\sum_{t=1}^T(y_t-\nu-\varphi y_{t-1})^2\right)$$
+
+::: {.retenir}
+Le maximum de vraisemblance conditionnelle de $(\nu,\varphi)$ équivaut à
+minimiser la somme des carrés des résidus — **MLE $\equiv$ MCO** pour un
+AR(1) (et plus généralement pour un AR($p$)). Sous stationnarité,
+$\sqrt T(\widehat\delta-\delta) \overset{\text{asy}}{\sim} \mathcal N(0,\cdot)$.
+:::
+
+Pour un MA ou un ARMA général, la vraisemblance **exacte** (incluant la
+condition initiale) diffère de la vraisemblance conditionnelle, mais les
+deux MLE sont asymptotiquement équivalentes.
+
+------------------------------------------------------------------------
+
+## Sélection de modèle : AIC, BIC
+
+::: {.definition}
+$$\mathsf{AIC} = -2\log L + 2p, \qquad \mathsf{BIC} = -2\log L + \log(n)\,p$$
+avec $n$ le nombre d'observations, $p$ le nombre de paramètres. **Plus
+petit est mieux.**
+:::
+
+::: {.piege}
+Le BIC pénalise davantage la complexité que l'AIC dès que $n>7$ (car
+$\log n > 2$) : il tend à retenir des modèles plus **parcimonieux**.
+Sur un échantillon financier journalier ($n$ dans les centaines ou
+milliers), les deux critères peuvent donc désigner des ordres
+différents — comparez toujours les deux.
+:::
+
+------------------------------------------------------------------------
+
+# Tests de mauvaise spécification
+
+Pour un AR(1), $y_t=\nu+\varphi y_{t-1}+\varepsilon_t$, les hypothèses
+à valider : indépendance des $\varepsilon_t$, normalité conditionnelle,
+homoscédasticité.
+
+## Normalité : test de Jarque-Bera
+
+$$JB = \frac{T-k}{6}\Big(\widehat\kappa_3^2+\frac{\widehat\kappa_4^2}{4}\Big) \overset{H_0}{\sim} \chi^2(2)$$
+$H_0$ : $\kappa_3=\kappa_4=0$ (asymétrie et excès de kurtosis nuls), $k$
+= nombre de régresseurs.
+
+------------------------------------------------------------------------
+
+## Hétéroscédasticité : test de White (1980)
+
+$H_0$ : $\mathbb V(\varepsilon_t\mid Y_{t-1})$ ne dépend pas de $Y_{t-1}$.
+
+1. Résidus $\widehat\varepsilon_t$ du modèle original.
+2. Régression auxiliaire : $\widehat\varepsilon_t^2 = \beta_1+\beta_2y_{t-1}+\beta_3y_{t-1}^2+\eta_t \to R^2_{het}$
+3. $TR^2_{het} \overset{H_0}{\sim} \chi^2_2$
+
+::: {.notes}
+Ce test de White est le prédécesseur direct, en esprit, du test d'Engle
+(1982) présenté au chapitre 3 : même logique de régression auxiliaire
+sur les résidus au carré, mais spécifiée cette fois sur les retards des
+résidus eux-mêmes plutôt que sur $y_{t-1}$.
+:::
+
+------------------------------------------------------------------------
+
+## Forme fonctionnelle : test RESET de Ramsey (1969)
+
+$H_0$ : la forme fonctionnelle est correctement spécifiée (les
+polynômes de $\widehat y_t$ n'apportent rien).
+
+1. Valeurs ajustées $\widehat y_t$ du modèle original.
+2. Régression auxiliaire : $y_t = \beta_1+\beta_2y_{t-1}+\beta_3\widehat y_t^2+\eta_t \to R^2_{reset}$
+3. $TR^2_{reset} \overset{H_0}{\sim} \chi^2_m$ ($m$ = nombre de restrictions)
+
+------------------------------------------------------------------------
+
+## Autocorrélation résiduelle : Box-Pierce et Ljung-Box
+
+$H_0: \rho(1)=\dots=\rho(m)=0$ sur les résidus.
+
+$$Q(m) = T(T+2)\sum_{h=1}^m \frac{\widehat\rho(h)^2}{T-h} \overset{H_0}{\sim} \chi^2(m-p-q)$$
+
+::: {.retenir}
+Application directe (déjà vue en TD1/TP1 sur les rendements bruts) : ici
+le test porte sur les résidus **d'estimation** d'un ARMA, pas sur la
+série brute — validation nécessaire avant d'utiliser le modèle pour
+prévoir.
+:::
+
+------------------------------------------------------------------------
+
+## Effet ARCH résiduel : test d'Engle (1982)
+
+$H_0: \mathbb V(\varepsilon_t\mid\varepsilon_{t-1})$ constante.
+
+1. Résidus $\widehat\varepsilon_t$ de l'ARMA.
+2. Régression auxiliaire : $\widehat\varepsilon_t^2=\beta_1+\beta_2\widehat\varepsilon_{t-1}^2+\eta_t \to R^2_{arch}$
+3. $TR^2_{arch} \overset{H_0}{\sim} \chi^2_m$
+
+::: {.notes}
+**Charnière vers le chapitre 3.** Ce test est présenté ici en anticipant
+sa forme générale ; il sera détaillé et pratiqué (procédure en 3 étapes,
+ordre $q$, statistique exacte) au chapitre 3. Sur des rendements
+financiers, ce test est presque toujours rejeté **après** un ARMA —
+c'est précisément ce résidu hétéroscédastique que le chapitre 3 va
+modéliser.
+:::
+
+------------------------------------------------------------------------
+
+# Application : persistance et mauvaise spécification
+
+Exemple (taux de chômage américain, AR(1)) :
+$$x_t = 5{,}59 + 0{,}97\,x_{t-1} + \varepsilon_t \qquad (\text{p-valeurs} \approx 0)$$
+
+- Forte persistance ($\widehat\varphi=0{,}97$), mais pas de rejet formel
+  de la stationnarité (ADF).
+- Le test de normalité des résidus est **rejeté** : le modèle n'est pas
+  congruent.
+
+::: {.piege}
+Une estimation « significative » (p-valeurs proches de 0) ne garantit
+pas un modèle correctement spécifié : les tests de diagnostic
+(normalité, hétéroscédasticité, autocorrélation résiduelle) doivent
+systématiquement être menés après l'estimation, jamais seulement la
+significativité des coefficients.
+:::
+
+::: {.notes}
+**Clôture.** Un ARMA mal spécifié suggère souvent d'ajouter des
+covariables (modèles dynamiques multivariés, VAR) — ou, si le problème
+vient de la **variance** plutôt que de la moyenne, de passer aux
+modèles ARCH/GARCH du chapitre 3.
+:::
+
+------------------------------------------------------------------------
+
+# Références
+
+- Box, G.E.P., Jenkins, G.M. (1976). *Time Series Analysis: Forecasting and Control*. Holden-Day.
+- Engle, R.F. (1982). Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation. *Econometrica*, 50(4), 987-1007.
+- Hamilton, J.D. (1994). *Time Series Analysis*. Princeton University Press.
+- Ramsey, J.B. (1969). Tests for Specification Errors in Classical Linear Least-Squares Regression Analysis. *Journal of the Royal Statistical Society B*, 31(2), 350-371.
+- White, H. (1980). A Heteroskedasticity-Consistent Covariance Matrix Estimator and a Direct Test for Heteroskedasticity. *Econometrica*, 48(4), 817-838.

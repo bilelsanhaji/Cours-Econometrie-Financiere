@@ -1,0 +1,135 @@
+---
+title: "Chapitre 0 — Présentation générale"
+subtitle: "Économétrie Financière · M2 MASERATI · UPEC (Créteil)"
+# Configuration commune (thème, tableau blanc, découpage) : _quarto.yml à la racine
+format:
+  revealjs:
+    footer: "Économétrie Financière — Créteil — Chapitre 0"
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  fig.width = 10,
+  fig.height = 5,
+  dpi = 192,
+  fig.keep = "last",
+  message = FALSE,
+  warning = FALSE,
+  results = "markup"
+)
+```
+
+------------------------------------------------------------------------
+
+# De quoi il s'agit
+
+Le cours applique à la finance les outils de l'économétrie des séries
+temporelles : modéliser la **moyenne conditionnelle** des rendements
+(ARMA), puis leur **variance conditionnelle** (ARCH/GARCH), puis les
+**covariances et corrélations conditionnelles** entre plusieurs actifs
+(GARCH multivarié).
+
+::: {.definition}
+**Fil conducteur** : un rendement financier n'est presque jamais
+autocorrélé, mais son carré l'est presque toujours. C'est cet écart entre
+moyenne et variance qui justifie tout le programme.
+:::
+
+::: {.notes}
+**Séance 1, ouverture — le format est condensé (18 h contre 36 h à
+Paris 8) : viser l'essentiel du chapitre 1 en une demi-séance.**
+
+Partir du même exemple qu'en version longue (cours puis rendement puis
+rendement au carré), mais sans s'attarder sur les prérequis
+économétriques : ce public en a un usage plus récent et plus rapide.
+:::
+
+------------------------------------------------------------------------
+
+# Plan du cours
+
+|  Chapitre | Ce que vous saurez faire |
+|---|------|
+| **1.**  Données financières et faits stylisés | Calculer des rendements, caractériser leur distribution, reconnaître les faits stylisés |
+| **2.**  Processus ARMA | Identifier, estimer et valider un ARMA sur des rendements |
+| **3.**  Modèles ARCH et GARCH univariés | Tester l'effet ARCH, spécifier et estimer un GARCH, comparer les modèles asymétriques |
+| **4.**  GARCH multivarié | Passer du cas univarié au cas multivarié, estimer un DCC, interpréter des corrélations dynamiques |
+
+------------------------------------------------------------------------
+
+# 6 séances de 3 h
+soit 18 h — cours et applications sur `R` dans la même séance.
+
+| Séance | Contenu |
+|-|-----------|
+| **1** | Introduction, données financières — propriétés statistiques, faits stylisés |
+| **2** | Processus ARMA, estimation et diagnostic |
+| **3** | Modèles ARCH/GARCH |
+| **4** | Extensions GARCH (asymétries), Value-at-Risk |
+| **5** | Introduction au GARCH multivarié |
+| **6** | Application GARCH multivarié et présentation des travaux |
+
+::: {.notes}
+**5 min.** Ce découpage en 6 séances est celui que vous suivez déjà
+depuis plusieurs années — le détail séance par séance ne change pas ici,
+seule la mise en forme des supports change. Voir
+`06-Enseignant/deroule-creteil.qmd` pour la correspondance précise entre
+plages de slides et séances.
+:::
+
+------------------------------------------------------------------------
+
+# Objectifs et outils
+
+**À la fin du semestre, vous devez pouvoir :**
+
+- manipuler des séries de prix et calculer des rendements,
+- caractériser les propriétés statistiques d'une série financière,
+- spécifier et estimer un modèle de volatilité adapté aux données,
+- analyser les covariances et corrélations dynamiques entre actifs,
+- produire un rapport d'analyse reproductible sur données réelles.
+
+**Les travaux pratiques se font en `R`.**
+
+------------------------------------------------------------------------
+
+# Évaluation
+
+**Aucune**, mais travail à réaliser en cours
+
+------------------------------------------------------------------------
+
+# Références bibliographiques 1/2
+
+**Ouvrages principaux**
+
+- Brooks, C. (2014). *Introductory Econometrics for Finance*. Cambridge University Press, 3ème édition.
+- Tsay, R. (2010). *Analysis of Financial Time Series*. Wiley, 3ème édition.
+- Campbell, J., Lo, A., MacKinlay, A.C. (1997). *The Econometrics of Financial Markets*. Princeton University Press.
+
+**Ouvrages spécialisés**
+
+- Francq, C., Zakoian, J.M. (2010). *GARCH Models: Structure, Statistical Inference and Financial Applications*. Wiley.
+- Gourieroux, C. (1997). *ARCH Models and Financial Applications*. Springer.
+
+------------------------------------------------------------------------
+
+# Références bibliographiques 2/2
+
+**Articles fondateurs**
+
+- Engle, R.F. (1982). Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation. *Econometrica*, 50(4), 987-1007.
+- Bollerslev, T. (1986). Generalized Autoregressive Conditional Heteroskedasticity. *Journal of Econometrics*, 31(3), 307-327.
+- Engle, R.F., Sheppard, K. (2001). Theoretical and Empirical properties of Dynamic Conditional Correlation Multivariate GARCH. *NBER Working Paper*.
+
+------------------------------------------------------------------------
+
+# Contacts
+
+**Enseignant** : Bilel Sanhaji — bilel.sanhaji@univ-paris8.fr
+
+**Ressources en ligne** : github, Moodle. Données : Yahoo Finance, FRED.

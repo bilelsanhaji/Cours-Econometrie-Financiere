@@ -1,0 +1,581 @@
+---
+title: "Chapitre 4 — GARCH multivarié"
+subtitle: "Économétrie Financière · M2"
+# Configuration commune (thème, tableau blanc, découpage) : _quarto.yml à la racine
+format:
+  revealjs:
+    footer: "Économétrie Financière — Chapitre 4"
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  fig.width = 10,
+  fig.height = 5,
+  dpi = 192,
+  fig.keep = "last",
+  message = FALSE,
+  warning = FALSE,
+  results = "markup"
+)
+```
+
+**Objectifs du chapitre**
+
+- Comprendre pourquoi la modélisation univariée (chapitre 3) ne suffit pas dès qu'on détient plusieurs actifs
+- Distinguer les deux grandes familles de modèles GARCH multivariés (VEC/BEKK vs. CCC/DCC)
+- Maîtriser le modèle DCC — le plus utilisé en pratique — et son estimation en deux étapes
+- Situer les limites pratiques de ces modèles (fléau de la dimension)
+
+::: {.notes}
+**Ouverture.** Ce chapitre généralise le chapitre 3 : on ne modélise
+plus la variance conditionnelle d'un seul actif, mais la matrice de
+variance-covariance conditionnelle de $N$ actifs. C'est la dernière
+brique du cours — moyenne (chapitre 2) $\to$ variance (chapitre 3)
+$\to$ covariances et corrélations (ce chapitre).
+
+Aucune application `rugarch`/`R` dans ce chapitre théorique — voir
+`03-TP/TP4-mgarch.qmd` pour l'estimation d'un DCC avec `rmgarch`.
+:::
+
+------------------------------------------------------------------------
+
+# Introduction
+
+## Rendements et volatilité en univers multivarié
+
+Soit $p_{it}$ le prix de l'actif $i$ à la date $t$, et son rendement
+$y_{it} = \log p_{it} - \log p_{i,t-1}$. En notation vectorielle, pour
+$N$ actifs :
+$$\mathbf p_t = (p_{1t},\dots,p_{Nt})', \qquad \mathbf y_t = \Delta\log \mathbf p_t$$
+
+::: {.definition}
+La **volatilité** d'un actif est l'écart-type (ou la variance) de son
+rendement ; la **covolatilité** entre deux actifs est la covariance
+entre leurs rendements. Comme la volatilité univariée, la volatilité
+multivariée est **latente** : jamais observée directement, seulement
+inférée à partir des rendements observés.
+:::
+
+------------------------------------------------------------------------
+
+## Pourquoi un modèle multivarié ?
+
+Modéliser chaque série séparément (chapitre 3, actif par actif) laisse
+de côté l'information sur les **comouvements** entre actifs.
+
+::: {.retenir}
+**Motivations pratiques** : allocation de portefeuille, VaR en
+portefeuille (pas seulement actif par actif), couverture (*hedging*) par
+contrats à terme, transmission de volatilité entre marchés, modèles
+d'évaluation d'actifs (CAPM conditionnel, etc.). Toutes ces applications
+ont besoin non seulement des variances individuelles $h_{iit}$, mais
+aussi des **covariances conditionnelles** $h_{ijt}$.
+:::
+
+------------------------------------------------------------------------
+
+## Le cadre général
+
+::: {.definition}
+$$\mathbf y_t = \boldsymbol\mu_t + \boldsymbol\varepsilon_t, \qquad t=1,\dots,T$$
+avec $\boldsymbol\mu_t = \mathbb E(\mathbf y_t\mid\mathcal F_{t-1})$ (souvent
+$\mathbf 0$, ou un VARMA — chapitre 2), et $\boldsymbol\varepsilon_t$ un
+vecteur $N\times1$ tel que
+$$\mathbb E(\boldsymbol\varepsilon_t\mid\mathcal F_{t-1}) = \mathbf 0, \qquad
+\mathbb E(\boldsymbol\varepsilon_t\boldsymbol\varepsilon_t'\mid\mathcal F_{t-1}) = \mathbf H_t$$
+$\mathbf H_t = \mathbf H_t(\theta)$ est la **matrice de
+variance-covariance conditionnelle**. Un processus **GARCH multivarié**
+s'écrit
+$$\boldsymbol\varepsilon_t = \mathbf H_t^{1/2}\mathbf z_t, \qquad \mathbf z_t \sim \text{i.i.d.}(\mathbf 0, \mathbf I_N)$$
+:::
+
+$\mathbf H_t^{1/2}$ est n'importe quelle matrice $N\times N$ telle que
+$\mathbf H_t$ soit bien la variance conditionnelle de $\mathbf y_t$
+(par exemple une factorisation de Cholesky).
+
+------------------------------------------------------------------------
+
+## Trois défis
+
+::: {.piege}
+1. **Positivité** : garantir $\mathbf H_t$ définie positive à toute
+   date, sachant $\mathbf H_0$ définie positive.
+2. **Parcimonie** : éviter l'explosion du nombre de paramètres tout en
+   gardant une dynamique suffisamment riche pour $\mathbf H_t$.
+3. **Stationnarité** : trouver la variance non conditionnelle
+   $\mathbf H = \mathbb E(\mathbf H_t)$ et les conditions de son
+   existence.
+:::
+
+Par simplicité, on se limite ici aux modèles MGARCH(1,1) : $\mathbf H_t$
+fonction d'un seul retard de $\boldsymbol\varepsilon_t$ et d'un seul
+retard de lui-même.
+
+------------------------------------------------------------------------
+
+## Typologie des modèles MGARCH
+
+Généralisation multivariée du GARCH(1,1) univarié
+$h_t = \omega+\alpha\varepsilon_{t-1}^2+\gamma h_{t-1}$ :
+
+::: {.definition}
+- **Modèles de variances et covariances** : VEC, BEKK — généralisation
+  directe, matricielle, de l'équation GARCH.
+- **Modèles de variances et corrélations** : CCC, DCC — on sépare les
+  variances individuelles (GARCH univariés) de la structure de
+  corrélation entre elles.
+:::
+
+------------------------------------------------------------------------
+
+# Modèles de variances et covariances
+
+## VEC(1,1), cas bivarié
+
+Bollerslev, Engle et Wooldridge (1988) :
+$$
+\begin{aligned}
+h_{11t} &= c_1 + a_{11}\varepsilon_{1,t-1}^2 + a_{12}\varepsilon_{1,t-1}\varepsilon_{2,t-1} + a_{13}\varepsilon_{2,t-1}^2 + g_{11}h_{11,t-1}+g_{12}h_{21,t-1}+g_{13}h_{22,t-1}\\
+h_{21t} &= c_2 + a_{21}\varepsilon_{1,t-1}^2 + a_{22}\varepsilon_{1,t-1}\varepsilon_{2,t-1} + a_{23}\varepsilon_{2,t-1}^2 + g_{21}h_{11,t-1}+g_{22}h_{21,t-1}+g_{23}h_{22,t-1}\\
+h_{22t} &= c_3 + a_{31}\varepsilon_{1,t-1}^2 + a_{32}\varepsilon_{1,t-1}\varepsilon_{2,t-1} + a_{33}\varepsilon_{2,t-1}^2 + g_{31}h_{11,t-1}+g_{32}h_{21,t-1}+g_{33}h_{22,t-1}
+\end{aligned}
+$$
+
+::: {.piege}
+Nombre de paramètres en $O(N^4)$ : 21 pour $N=2$, 78 pour $N=3$, 210
+pour $N=4$ — c'est le problème central de ce modèle, non paramétrique
+au sens économique du terme mais très vite ingérable numériquement.
+:::
+
+------------------------------------------------------------------------
+
+## Opérateurs $\mathsf{vech}$ et $\mathsf{vec}$
+
+::: {.definition}
+$\mathsf{vech}$ empile le **triangle inférieur** d'une matrice
+symétrique $N\times N$ en un vecteur $N(N+1)/2\times1$ :
+$$\mathsf{vech}\,\mathbf H_t = (h_{11t},h_{21t},h_{22t},h_{31t},\dots,h_{NNt})'$$
+$\mathsf{vec}$ empile **toute la matrice**, colonne par colonne.
+:::
+
+**VEC(1,1) général** :
+$$\mathsf{vech}\,\mathbf H_t = \mathbf c + \mathbf A\,\mathsf{vech}(\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}') + \mathbf G\,\mathsf{vech}\,\mathbf H_{t-1}$$
+avec $\mathbf c$ un vecteur $N^*\times1$, $\mathbf A,\mathbf G$ des
+matrices $N^*\times N^*$, $N^*=N(N+1)/2$.
+
+------------------------------------------------------------------------
+
+### Stationnarité et positivité du VEC
+
+::: {.retenir}
+Le VEC(1,1) se réécrit comme un VARMA(1,1) sur
+$\mathsf{vech}(\boldsymbol\varepsilon_t\boldsymbol\varepsilon_t')$. Il est
+**faiblement stationnaire** si les valeurs propres de $\mathbf A+\mathbf G$
+sont toutes $<1$ en module ; alors
+$$\mathsf{vech}\,\mathbf H = (\mathbf I_{N^*}-\mathbf A-\mathbf G)^{-1}\mathbf c$$
+:::
+
+::: {.piege}
+**Positivité** (Gouriéroux, 1997) : condition suffisante — $\mathbf C$,
+$\tilde{\mathbf A}$, $\tilde{\mathbf G}$ semi-définies positives, l'une
+au moins définie positive. En pratique ces contraintes ne sont
+**généralement pas imposées** lors de l'estimation, mais vérifiées après
+coup.
+:::
+
+------------------------------------------------------------------------
+
+### VEC diagonal et scalaire
+
+::: {.definition}
+**DVEC** (diagonal VEC) : $\mathbf A$ et $\mathbf G$ diagonales — chaque
+variance $h_{iit}$ ne dépend que de son propre passé
+($\varepsilon_{i,t-1}^2$, $h_{ii,t-1}$), chaque covariance $h_{ijt}$ que
+du sien ($\varepsilon_{i,t-1}\varepsilon_{j,t-1}$, $h_{ij,t-1}$) — aucun
+effet de contagion (*spillover*).
+:::
+
+Réduction drastique : $9$ paramètres au lieu de $21$ pour $N=2$ ; $18$
+au lieu de $78$ pour $N=3$. **VEC scalaire** : $\mathbf A=a\,\mathbf U_N^*$,
+$\mathbf G=g\,\mathbf U_N^*$ ($\mathbf U_N^*$ matrice de uns) — seulement
+2 paramètres dynamiques, quel que soit $N$.
+
+------------------------------------------------------------------------
+
+## BEKK(1,1,1), cas bivarié
+
+Engle et Kroner (1995) — même structure que le VEC mais **paramétrée
+par construction pour garantir la positivité** :
+$$\mathbf H_t = \boldsymbol\Omega + \mathbf A'\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}'\mathbf A + \mathbf G'\mathbf H_{t-1}\mathbf G$$
+
+::: {.retenir}
+$\mathbf H_t$ est définie positive dès que $\mathbf H_0$ et
+$\boldsymbol\Omega$ le sont — on peut imposer
+$\boldsymbol\Omega=\mathbf C'\mathbf C$ ($\mathbf C$ triangulaire) pour
+le garantir automatiquement. C'est l'avantage majeur du BEKK sur le VEC
+général : la positivité est **structurelle**, pas une contrainte à
+vérifier après coup.
+:::
+
+11 paramètres pour $N=2$ (contre 21 pour le VEC) — même souplesse,
+moins de paramètres, au prix d'une interprétation moins directe des
+coefficients individuels.
+
+------------------------------------------------------------------------
+
+### BEKK général et stationnarité
+
+::: {.definition}
+**BEKK($1,1,K$)** :
+$$\mathbf H_t = \boldsymbol\Omega + \sum_{k=1}^K \mathbf A_k'\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}'\mathbf A_k + \sum_{k=1}^K \mathbf G_k'\mathbf H_{t-1}\mathbf G_k$$
+:::
+
+En réécriture vec ($\mathsf{vec}(\mathbf{ABC})=(\mathbf C'\otimes\mathbf A)\mathsf{vec}\,\mathbf B$), le BEKK(1,1,1) est stationnaire si les
+valeurs propres de $(\mathbf A\otimes\mathbf A)+(\mathbf G\otimes\mathbf G)$
+sont $<1$ en module.
+
+**BEKK scalaire diagonal** ($\mathbf A_1=a\mathbf I_N$, $\mathbf G_1=g\mathbf I_N$) :
+$$\mathbf H_t = \boldsymbol\Omega + \alpha\,\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}' + \gamma\,\mathbf H_{t-1}, \qquad \alpha+\gamma<1$$
+— exactement la forme d'un GARCH(1,1) univarié appliqué matriciellement.
+
+::: {.notes}
+Nombre de paramètres, VEC(1,1) vs BEKK(1,1,1) selon $N$ : 21/11 ($N=2$),
+78/24 ($N=3$), 210/42 ($N=4$), 465/65 ($N=5$) — l'écart se creuse vite,
+c'est l'argument numéro un en faveur du BEKK sur le VEC général dès que
+$N\geq3$.
+:::
+
+------------------------------------------------------------------------
+
+# Modèles de variances et corrélations
+
+## Décomposition variance-corrélation
+
+::: {.definition}
+Toute matrice $\mathbf H_t$ définie positive s'écrit
+$$\mathbf H_t = \mathbf D_t\mathbf R_t\mathbf D_t, \qquad
+\mathbf D_t = \mathrm{diag}(h_{11t}^{1/2},\dots,h_{NNt}^{1/2}), \qquad
+\mathbf R_t = (\rho_{ijt}),\ \rho_{iit}=1$$
+d'où $h_{ijt} = \rho_{ijt}\sqrt{h_{iit}h_{jjt}}$ pour $i\neq j$.
+:::
+
+::: {.retenir}
+Chaque $h_{iit}$ peut être une équation GARCH **univariée** classique
+(chapitre 3, estimée indépendamment) ; $\mathbf H_t$ est définie
+positive dès que $\mathbf R_t$ et tous les $h_{iit}$ le sont — bien plus
+facile à garantir qu'en VEC/BEKK.
+:::
+
+------------------------------------------------------------------------
+
+## CCC — Corrélations Conditionnelles Constantes
+
+Bollerslev (1990) :
+$$\mathbf R_t = \mathbf R = (\rho_{ij}), \quad \rho_{ii}=1 \quad (\text{constante dans le temps})$$
+
+::: {.retenir}
+La dynamique des **covariances** provient uniquement de celle des
+**variances** individuelles ($h_{ijt}=\rho_{ij}\sqrt{h_{iit}h_{jjt}}$) —
+$N(N-1)/2$ paramètres seulement dans $\mathbf R$. Hypothèse forte :
+aucune évolution des corrélations dans le temps.
+:::
+
+------------------------------------------------------------------------
+
+## DCC — Corrélations Conditionnelles Dynamiques
+
+Engle (2002), version scalaire :
+$$\mathbf R_t = (\mathrm{Diag}\,\mathbf Q_t)^{-1/2}\mathbf Q_t(\mathrm{Diag}\,\mathbf Q_t)^{-1/2}$$
+
+::: {.definition}
+$$\mathbf Q_t = (1-\theta_1-\theta_2)\overline{\mathbf Q} + \theta_1\mathbf u_{t-1}\mathbf u_{t-1}' + \theta_2\mathbf Q_{t-1}$$
+avec $u_{it}=\varepsilon_{it}/\sqrt{h_{iit}}$, $\overline{\mathbf Q}$
+symétrique définie positive, $\theta_1,\theta_2>0$, $\theta_1+\theta_2<1$
+$\Rightarrow$ $\mathbf Q_t,\mathbf R_t$ définies positives.
+:::
+
+::: {.piege}
+$\mathbf Q_t$ **n'est pas** elle-même une matrice de corrélation (ses
+termes diagonaux ne valent pas 1) — c'est la normalisation par
+$(\mathrm{Diag}\,\mathbf Q_t)^{-1/2}$ qui produit $\mathbf R_t$, une vraie
+matrice de corrélation.
+:::
+
+Si $\theta_1=\theta_2=0$ (et $\overline q_{ii}=1$), on retrouve
+exactement le CCC : **le CCC est un cas particulier testable du DCC**.
+
+------------------------------------------------------------------------
+
+### DCC asymétrique (ADCC)
+
+$$\mathbf Q_t = \boldsymbol\Omega + \theta_1\mathbf u_{t-1}\mathbf u_{t-1}' + \gamma\,\boldsymbol\eta_{t-1}\boldsymbol\eta_{t-1}' + \theta_2\mathbf Q_{t-1}, \qquad \boldsymbol\eta_t = \min(\mathbf u_t,\mathbf 0)$$
+
+::: {.retenir}
+Si $\gamma>0$ : les corrélations augmentent **davantage** quand les deux
+chocs sont négatifs (marché en baisse) que lorsqu'ils sont positifs —
+l'analogue, pour les corrélations, de l'effet de levier vu au
+chapitre 3 pour la volatilité (GJR-GARCH, EGARCH).
+:::
+
+Toutes les corrélations obéissent à la **même** dynamique
+($\theta_1,\theta_2$ scalaires) — économe en paramètres, mais
+restrictif quand $N$ est grand.
+
+------------------------------------------------------------------------
+
+### Nombre de paramètres : CCC/DCC vs VEC/BEKK
+
+| | $N=2$ | $N=3$ | $N=4$ | $N=5$ |
+|---|---|---|---|---|
+| VEC(1,1) | 21 | 78 | 210 | 465 |
+| BEKK(1,1,1) | 11 | 24 | 42 | 65 |
+| CCC | 7 | 12 | 18 | 25 |
+| DCC | 9 | 14 | 20 | 27 |
+
+::: {.notes}
+Ce tableau résume à lui seul pourquoi CCC/DCC dominent la pratique dès
+que $N$ dépasse quelques actifs : la croissance en $O(N^2)$
+(CCC/DCC) contre $O(N^4)$ (VEC) ou même $O(N^2)$ mais avec une constante
+bien plus grande (BEKK) devient vite décisive.
+:::
+
+------------------------------------------------------------------------
+
+# Estimation
+
+## Maximum de vraisemblance
+
+::: {.definition}
+Sous une densité $g(\mathbf z_t;\eta)$ pour $\mathbf z_t$ :
+$$L_T(\theta,\eta) = \sum_{t=1}^T \log f(\mathbf y_t\mid\theta,\eta,\mathcal I_{t-1}), \qquad
+f(\mathbf y_t\mid\cdot) = |\mathbf H_t|^{-1/2}g\big(\mathbf H_t^{-1/2}(\mathbf y_t-\boldsymbol\mu_t);\eta\big)$$
+:::
+
+**Vraisemblance gaussienne** ($\mathbf z_t\sim\mathcal N(\mathbf 0,\mathbf I_N)$) :
+$$L_T(\theta) = -\frac12\sum_{t=1}^T\Big(\log|\mathbf H_t| + (\mathbf y_t-\boldsymbol\mu_t)'\mathbf H_t^{-1}(\mathbf y_t-\boldsymbol\mu_t)\Big)$$
+
+::: {.retenir}
+Cette **quasi-vraisemblance gaussienne (QMLE)** reste consistante même
+si la vraie densité n'est pas gaussienne (pourvu que $\boldsymbol\mu_t$
+et $\mathbf H_t$ soient bien spécifiés) — mais moins efficace que le
+vrai MLE. Exactement le même principe qu'en univarié (chapitre 3).
+:::
+
+------------------------------------------------------------------------
+
+## Au-delà de la normalité
+
+Comme en univarié, la normalité conditionnelle est rarement réaliste
+pour des rendements financiers, et le choix de la distribution compte
+particulièrement pour des applications comme la VaR.
+
+::: {.definition}
+**Student multivariée** $ST(\mathbf 0,\mathbf I_N,\nu)$ :
+$$g(\mathbf z_t\mid\nu) = \frac{\Gamma\!\left(\frac{\nu+N}2\right)}{\Gamma\!\left(\frac\nu2\right)[\pi(\nu-2)]^{N/2}}\left[1+\frac{\mathbf z_t'\mathbf z_t}{\nu-2}\right]^{-\frac{N+\nu}2}$$
+$\nu\to\infty \Rightarrow$ convergence vers $\mathcal N(\mathbf 0,\mathbf I_N)$.
+:::
+
+::: {.piege}
+Danger symétrique à celui du QMLE gaussien : si la distribution
+alternative choisie (Student, Student asymétrique, mélange de
+gaussiennes...) est elle-même mal spécifiée, l'estimateur peut devenir
+**inconsistant** — contrairement au QMLE gaussien, robuste par
+construction à une mauvaise spécification de la distribution.
+:::
+
+------------------------------------------------------------------------
+
+## Estimation en deux étapes (CCC/DCC)
+
+En substituant $\mathbf H_t=\mathbf D_t\mathbf R_t\mathbf D_t$, la
+vraisemblance gaussienne se décompose :
+$$L_T(\theta) = \underbrace{-\frac12\sum_t\big(2\log|\mathbf D_t|+\mathbf u_t'\mathbf u_t\big)}_{Q1L_T(\theta_V)} + \underbrace{-\frac12\sum_t\big(\log|\mathbf R_t|+\mathbf u_t'\mathbf R_t^{-1}\mathbf u_t - \mathbf u_t'\mathbf u_t\big)}_{Q2L_T(\theta_V,\theta_R)}$$
+
+::: {.retenir}
+**Étape 1** : $\widehat\theta_V = \arg\max Q1L_T(\theta_V)$ — s'il n'y a
+pas d'effet de contagion dans les variances, cela revient simplement à
+estimer $N$ GARCH **univariés indépendants** (chapitre 3).
+
+**Étape 2** : $\widehat\theta_R = \arg\max Q2L_T(\widehat\theta_V,\theta_R)$
+— beaucoup plus simple qu'une estimation jointe, puisque $\theta_V$ est
+fixé.
+:::
+
+------------------------------------------------------------------------
+
+### Propriétés et coût de l'approche en deux étapes
+
+- Consistants, mais **non efficaces asymptotiquement** (perte
+  d'information sur $\theta_V$ à l'étape 1) — Engle (2002), Engle et
+  Sheppard (2001), Aielli (2009).
+- La matrice de variance de $\widehat\theta_R$ doit être corrigée pour
+  tenir compte de l'étape 1 — important pour l'inférence, moins pour la
+  prévision ponctuelle (VaR).
+
+::: {.notes}
+En pratique (TP4, `rmgarch::dccfit`) : c'est exactement cette procédure
+en deux étapes qui est implémentée — spécifier $N$ GARCH univariés,
+puis la dynamique DCC par-dessus.
+:::
+
+------------------------------------------------------------------------
+
+## *Variance targeting*
+
+::: {.definition}
+Idée : remplacer certains paramètres par un estimateur non paramétrique
+de la variance non conditionnelle, pour réduire le nombre de paramètres
+à optimiser numériquement. BEKK scalaire :
+$$\mathbf H_t = (1-\alpha-\gamma)\widehat{\mathbf H} + \alpha\,\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}' + \gamma\,\mathbf H_{t-1}, \qquad
+\widehat{\mathbf H} = \frac1T\sum_{t=1}^T \widehat{\boldsymbol\varepsilon}_t\widehat{\boldsymbol\varepsilon}_t'$$
+:::
+
+Ne laisse plus que **deux** paramètres à optimiser, quel que soit $N$.
+
+::: {.piege}
+Si $N$ approche $T$, $\widehat{\mathbf H}$ devient mal conditionnée
+(proche de singulière) : Engle, Shepard et Sheppard (2008) montrent par
+simulation un biais à la baisse marqué de $\widehat\alpha,\widehat\gamma$
+dans ce cas.
+:::
+
+------------------------------------------------------------------------
+
+# Application : VaR de portefeuille et *backtesting*
+
+## De $\mathbf H_t$ à la VaR d'un portefeuille
+
+Pour un portefeuille de poids $\mathbf w$ (constants), le rendement du
+portefeuille est $r_{p,t}=\mathbf w'\mathbf r_t$, de moyenne et variance
+conditionnelles :
+$$\mu_{p,t}=\mathbf w'\boldsymbol\mu_t, \qquad \sigma_{p,t}^2=\mathbf w'\mathbf H_t\mathbf w$$
+
+::: {.definition}
+Sous hypothèse de normalité conditionnelle, la **VaR** du portefeuille au
+seuil $\alpha$ (ex. 5 %) pour la date $t+1$ :
+$$\text{VaR}_{p,t+1}(\alpha) = \mu_{p,t+1} + z_\alpha\,\sigma_{p,t+1}, \qquad z_\alpha=\Phi^{-1}(\alpha)$$
+C'est exactement le calcul du TP3 (exercice 6, cas univarié), appliqué
+ici à $\sigma_{p,t}$ tirée de $\mathbf H_t$ plutôt que d'un GARCH seul.
+:::
+
+::: {.retenir}
+$z_\alpha<0$ pour $\alpha<0{,}5$ (ex. $z_{5\%}=-1{,}645$) : la VaR est un
+niveau de rendement, pas une perte positive. Une **violation** à la date
+$t$ est l'événement $r_{p,t}<\text{VaR}_{p,t}(\alpha)$.
+:::
+
+------------------------------------------------------------------------
+
+## Expected Shortfall (perte moyenne au-delà de la VaR)
+
+::: {.definition}
+Sous normalité, l'**Expected Shortfall** au même seuil :
+$$\text{ES}_{p,t+1}(\alpha) = \mu_{p,t+1} - \sigma_{p,t+1}\,\frac{\phi(z_\alpha)}{\alpha}$$
+avec $\phi$ la densité de la loi normale centrée réduite.
+:::
+
+::: {.piege}
+La VaR ne dit rien sur l'**ampleur** d'une perte au-delà du seuil — deux
+portefeuilles peuvent avoir la même VaR à 5 % et des pertes extrêmes très
+différentes. L'ES corrige ce défaut ; c'est pourquoi les accords de Bâle
+(depuis *Basel III/FRTB*) migrent vers l'ES pour le capital réglementaire.
+:::
+
+------------------------------------------------------------------------
+
+## *Backtesting* : le test de Kupiec (1995)
+
+Sur $T$ jours, on observe $N=\sum_t \mathbb 1\{r_{p,t}<\text{VaR}_{p,t}(\alpha)\}$
+violations, soit un taux $\widehat\pi=N/T$. Sous $H_0$ : le modèle est
+bien calibré ($\pi=\alpha$).
+
+::: {.definition}
+**Test du rapport de vraisemblance** (*proportion of failures*) :
+$$LR_{uc} = -2\ln\!\left[\frac{(1-\alpha)^{T-N}\alpha^{N}}{(1-\widehat\pi)^{T-N}\widehat\pi^{N}}\right] \;\underset{H_0}{\sim}\; \chi^2(1)$$
+On rejette $H_0$ (mauvaise calibration) si $LR_{uc}$ dépasse le quantile
+$\chi^2_{1,1-c}$ (ex. $3{,}841$ à 95 %).
+:::
+
+::: {.question}
+**Q.** $T=250$, $\alpha=5\%$ (soit $12{,}5$ violations attendues), et on
+observe $N=20$ violations. Que conclure ?
+
+**R.** $\widehat\pi=8\%$, $LR_{uc}\approx 4{,}04 > 3{,}841$ : on **rejette**
+$H_0$ à 95 % — le modèle sous-estime le risque (trop de violations, VaR
+pas assez conservatrice). Calcul détaillé : TD4, exercice 6.
+:::
+
+------------------------------------------------------------------------
+
+## Au-delà de Kupiec : le test de Christoffersen (1998)
+
+::: {.retenir}
+Kupiec ne teste que le **nombre** de violations, pas leur
+**répartition** dans le temps : un modèle peut avoir le bon taux moyen
+tout en concentrant ses violations pendant les crises (clustering), ce
+qui est précisément le défaut le plus dangereux en pratique.
+
+Christoffersen ajoute un test d'**indépendance** ($LR_{ind}$, fondé sur
+la matrice de transition de l'indicatrice de violation) et combine :
+$$LR_{cc} = LR_{uc} + LR_{ind} \;\underset{H_0}{\sim}\; \chi^2(2)$$
+$H_0$ : couverture correcte **et** violations indépendantes dans le temps.
+:::
+
+::: {.notes}
+Ne pas dériver $LR_{ind}$ au tableau (hors barème) : donner l'intuition
+(chaîne de Markov à deux états sur l'indicatrice de violation, test de
+l'égalité des probabilités de transition) et renvoyer à Christoffersen
+(1998) pour le détail. L'essentiel à retenir pour les étudiants : Kupiec
+seul ne suffit jamais à valider un modèle de VaR en pratique.
+:::
+
+------------------------------------------------------------------------
+
+# Limites et perspectives
+
+## Le fléau de la dimension
+
+::: {.retenir}
+Au-delà de $N\approx10$ actifs, seuls les modèles **scalaires**
+(DCC/BEKK scalaires) ou **factoriels** restent praticables. Des
+applications à grande échelle existent (Engle et Sheppard, 2001 : DCC
+scalaire sur 100 séries ; Engle, Shepard et Sheppard, 2008 : jusqu'à 480
+séries, avec *targeting*), mais restent l'exception, pas la norme d'un
+usage courant.
+:::
+
+Extensions actuelles : copules-GARCH (GARCH pour les variances + copule
+dynamique pour la dépendance), mélanges finis de GARCH, modèles à
+facteurs, utilisation de données haute fréquence (MIDAS, HEAVY).
+
+------------------------------------------------------------------------
+
+## Logiciels
+
+- **R** : `rmgarch` (DCC, notamment), `rugarch` (variances univariées en
+  entrée), `mgarchBEKK`, `ccgarch`.
+- Matlab (*MFE Toolbox*), OxMetrics (G@RCH), Stata.
+
+::: {.notes}
+**Clôture.** Ce chapitre boucle le cours : moyenne conditionnelle
+(chapitre 2, ARMA) $\to$ variance conditionnelle univariée (chapitre 3,
+GARCH) $\to$ variance-covariance conditionnelle multivariée (ce
+chapitre, DCC en particulier). Le TP4 applique un DCC sur un petit
+portefeuille (2 à 4 actifs) avec `rmgarch`, dans la continuité directe
+des TP1 à TP3.
+:::
+
+------------------------------------------------------------------------
+
+# Références
+
+- Bauwens, L., Laurent, S., Rombouts, J.V.K. (2006). Multivariate GARCH Models: A Survey. *Journal of Applied Econometrics*, 21, 79-109.
+- Bollerslev, T. (1990). Modelling the Coherence in Short-Run Nominal Exchange Rates: A Multivariate Generalized ARCH Model. *Review of Economics and Statistics*, 72(3), 498-505.
+- Bollerslev, T., Engle, R.F., Wooldridge, J.M. (1988). A Capital Asset Pricing Model with Time-Varying Covariances. *Journal of Political Economy*, 96(1), 116-131.
+- Engle, R.F. (2002). Dynamic Conditional Correlation: A Simple Class of Multivariate Generalized Autoregressive Conditional Heteroskedasticity Models. *Journal of Business & Economic Statistics*, 20(3), 339-350.
+- Engle, R.F., Kroner, K.F. (1995). Multivariate Simultaneous Generalized ARCH. *Econometric Theory*, 11(1), 122-150.
+- Silvennoinen, A., Teräsvirta, T. (2009). Multivariate GARCH Models. In *Handbook of Financial Time Series*, Springer, 201-229.
