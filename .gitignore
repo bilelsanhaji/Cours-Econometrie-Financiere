@@ -33,15 +33,17 @@
 # Le dépôt est PUBLIC : un sujet poussé ici est un sujet diffusé.
 05-Eval/partiel/
 
-# Matériaux bruts pré-conversion (Rmd/tex non retravaillés pour la
-# publication). `99-Archive/LISEZ-MOI.md`, lui, reste suivi : c'est la
-# documentation de ce qui a été repris des sources et pourquoi.
-99-Archive/sources-originales/
+# Dossier d'archive au complet : matériaux bruts pré-conversion (Rmd/tex non
+# retravaillés) et, potentiellement, l'archive personnelle (inscriptions,
+# évaluations — données nominatives) si elle se retrouve rangée ici.
+# `99-Archive/LISEZ-MOI.md` reste néanmoins suivi et publié : gitignore
+# n'agit que sur les fichiers pas encore ajoutés, pas sur un fichier déjà
+# suivi depuis un commit précédent.
+99-Archive/
 
-# Archive personnelle (inscriptions, évaluations — données nominatives).
-# Sans slash médian : exclue à N'IMPORTE QUEL niveau de l'arborescence, pas
-# seulement à la racine — ce dossier n'a rien à faire dans un dépôt public,
-# où qu'il se trouve.
+# Au cas où l'archive personnelle se retrouverait un jour hors de 99-Archive/
+# (pas de slash médian : exclue à tout niveau de l'arborescence, pas
+# seulement à la racine).
 99-archives/
 
 # Lanceurs macOS personnels (chemins absolus de votre machine) et script de
