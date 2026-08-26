@@ -41,11 +41,6 @@
 # suivi depuis un commit précédent.
 99-Archive/
 
-# Au cas où l'archive personnelle se retrouverait un jour hors de 99-Archive/
-# (pas de slash médian : exclue à tout niveau de l'arborescence, pas
-# seulement à la racine).
-99-archives/
-
 # Lanceurs macOS personnels (chemins absolus de votre machine) et script de
 # génération de la version étudiante : outillage local, jamais publié.
 *.command
