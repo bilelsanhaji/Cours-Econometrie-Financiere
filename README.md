@@ -66,8 +66,8 @@ fonctionne hors ligne. `Échap` donne la vue d'ensemble, `F` le plein écran.
 ## Récupérer le cours
 
 ```bash
-git clone https://github.com/bilelsanhaji/Cours-EconoFinanciere.git
-cd Cours-EconoFinanciere
+git clone https://github.com/bilelsanhaji/Cours-Econometrie-Financiere.git
+cd Cours-Econometrie-Financiere
 ```
 
 Le dépôt est mis à jour au fil du semestre. Pour récupérer les ajouts :

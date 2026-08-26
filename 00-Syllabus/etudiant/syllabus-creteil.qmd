@@ -9,7 +9,6 @@ format:
 
 <!-- Fichier engendré : toute modification ici serait écrasée. -->
 
-
 ```{r}
 #| label: setup
 #| include: false

@@ -9,7 +9,6 @@ format:
 
 <!-- Fichier engendré : toute modification ici serait écrasée. -->
 
-
 ```{r}
 #| label: setup
 #| include: false
@@ -254,8 +253,10 @@ tend vers la normale).
 Échantillon $\{R_1,\dots,R_T\}$ i.i.d., réalisation
 $\{r_1,\dots,r_T\}$ = le jeu de données.
 
+
 $$\widehat\mu_T=\overline R_T=\frac1T\sum_{t=1}^T R_t, \qquad
 \widehat\sigma_T^2=\frac1{T-1}\sum_{t=1}^T(R_t-\overline R_T)^2$$
+
 
 $$\widehat S_T=\frac{T^{-1}\sum_t(R_t-\overline R_T)^3}{\widehat\sigma_T^3}, \qquad
 \widehat K_T=\frac{T^{-1}\sum_t(R_t-\overline R_T)^4}{\widehat\sigma_T^4}$$

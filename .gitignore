@@ -38,6 +38,12 @@
 # documentation de ce qui a été repris des sources et pourquoi.
 99-Archive/sources-originales/
 
+# Archive personnelle (inscriptions, évaluations — données nominatives).
+# Sans slash médian : exclue à N'IMPORTE QUEL niveau de l'arborescence, pas
+# seulement à la racine — ce dossier n'a rien à faire dans un dépôt public,
+# où qu'il se trouve.
+99-archives/
+
 # Lanceurs macOS personnels (chemins absolus de votre machine) et script de
 # génération de la version étudiante : outillage local, jamais publié.
 *.command
