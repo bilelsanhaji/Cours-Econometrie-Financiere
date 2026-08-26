@@ -86,9 +86,3 @@ choix (par exemple AAPL, 2018–2020, autour de la crise Covid).
 Recommencez les exercices 2 à 5 sur un autre actif de votre choix.
 L'ordre ARMA retenu automatiquement est-il stable d'un actif à l'autre ?
 L'effet ARCH résiduel est-il systématique ?
-
-::: {.notes}
-Conserver le code de sélection ARMA + diagnostic : la partie
-« modélisation de la moyenne » du projet suit exactement cette
-démarche, avant de passer à la modélisation de la variance (TP3).
-:::

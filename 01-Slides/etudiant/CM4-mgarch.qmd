@@ -7,6 +7,9 @@ format:
     footer: "Économétrie Financière — Chapitre 4"
 ---
 
+<!-- Fichier engendré : toute modification ici serait écrasée. -->
+
+
 ```{r}
 #| label: setup
 #| include: false
@@ -29,17 +32,6 @@ knitr::opts_chunk$set(
 - Distinguer les deux grandes familles de modèles GARCH multivariés (VEC/BEKK vs. CCC/DCC)
 - Maîtriser le modèle DCC — le plus utilisé en pratique — et son estimation en deux étapes
 - Situer les limites pratiques de ces modèles (fléau de la dimension)
-
-::: {.notes}
-**Ouverture.** Ce chapitre généralise le chapitre 3 : on ne modélise
-plus la variance conditionnelle d'un seul actif, mais la matrice de
-variance-covariance conditionnelle de $N$ actifs. C'est la dernière
-brique du cours — moyenne (chapitre 2) $\to$ variance (chapitre 3)
-$\to$ covariances et corrélations (ce chapitre).
-
-Aucune application `rugarch`/`R` dans ce chapitre théorique — voir
-`03-TP/TP4-mgarch.qmd` pour l'estimation d'un DCC avec `rmgarch`.
-:::
 
 ------------------------------------------------------------------------
 
@@ -242,13 +234,6 @@ sont $<1$ en module.
 $$\mathbf H_t = \boldsymbol\Omega + \alpha\,\boldsymbol\varepsilon_{t-1}\boldsymbol\varepsilon_{t-1}' + \gamma\,\mathbf H_{t-1}, \qquad \alpha+\gamma<1$$
 — exactement la forme d'un GARCH(1,1) univarié appliqué matriciellement.
 
-::: {.notes}
-Nombre de paramètres, VEC(1,1) vs BEKK(1,1,1) selon $N$ : 21/11 ($N=2$),
-78/24 ($N=3$), 210/42 ($N=4$), 465/65 ($N=5$) — l'écart se creuse vite,
-c'est l'argument numéro un en faveur du BEKK sur le VEC général dès que
-$N\geq3$.
-:::
-
 ------------------------------------------------------------------------
 
 # Modèles de variances et corrélations
@@ -336,13 +321,6 @@ restrictif quand $N$ est grand.
 | CCC | 7 | 12 | 18 | 25 |
 | DCC | 9 | 14 | 20 | 27 |
 
-::: {.notes}
-Ce tableau résume à lui seul pourquoi CCC/DCC dominent la pratique dès
-que $N$ dépasse quelques actifs : la croissance en $O(N^2)$
-(CCC/DCC) contre $O(N^4)$ (VEC) ou même $O(N^2)$ mais avec une constante
-bien plus grande (BEKK) devient vite décisive.
-:::
-
 ------------------------------------------------------------------------
 
 # Estimation
@@ -415,12 +393,6 @@ fixé.
 - La matrice de variance de $\widehat\theta_R$ doit être corrigée pour
   tenir compte de l'étape 1 — important pour l'inférence, moins pour la
   prévision ponctuelle (VaR).
-
-::: {.notes}
-En pratique (TP4, `rmgarch::dccfit`) : c'est exactement cette procédure
-en deux étapes qui est implémentée — spécifier $N$ GARCH univariés,
-puis la dynamique DCC par-dessus.
-:::
 
 ------------------------------------------------------------------------
 
@@ -525,14 +497,6 @@ $$LR_{cc} = LR_{uc} + LR_{ind} \;\underset{H_0}{\sim}\; \chi^2(2)$$
 $H_0$ : couverture correcte **et** violations indépendantes dans le temps.
 :::
 
-::: {.notes}
-Ne pas dériver $LR_{ind}$ au tableau (hors barème) : donner l'intuition
-(chaîne de Markov à deux états sur l'indicatrice de violation, test de
-l'égalité des probabilités de transition) et renvoyer à Christoffersen
-(1998) pour le détail. L'essentiel à retenir pour les étudiants : Kupiec
-seul ne suffit jamais à valider un modèle de VaR en pratique.
-:::
-
 ------------------------------------------------------------------------
 
 # Limites et perspectives
@@ -559,15 +523,6 @@ facteurs, utilisation de données haute fréquence (MIDAS, HEAVY).
 - **R** : `rmgarch` (DCC, notamment), `rugarch` (variances univariées en
   entrée), `mgarchBEKK`, `ccgarch`.
 - Matlab (*MFE Toolbox*), OxMetrics (G@RCH), Stata.
-
-::: {.notes}
-**Clôture.** Ce chapitre boucle le cours : moyenne conditionnelle
-(chapitre 2, ARMA) $\to$ variance conditionnelle univariée (chapitre 3,
-GARCH) $\to$ variance-covariance conditionnelle multivariée (ce
-chapitre, DCC en particulier). Le TP4 applique un DCC sur un petit
-portefeuille (2 à 4 actifs) avec `rmgarch`, dans la continuité directe
-des TP1 à TP3.
-:::
 
 ------------------------------------------------------------------------
 

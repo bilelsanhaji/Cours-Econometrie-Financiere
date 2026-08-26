@@ -7,6 +7,9 @@ format:
     footer: "Économétrie Financière — Chapitre 1"
 ---
 
+<!-- Fichier engendré : toute modification ici serait écrasée. -->
+
+
 ```{r}
 #| label: setup
 #| include: false
@@ -29,19 +32,6 @@ knitr::opts_chunk$set(
 - Distinguer prix et rendements, rendement simple et log-rendement
 - Caractériser une distribution par ses moments (moyenne, variance, asymétrie, kurtosis)
 - Reconnaître les faits stylisés des séries financières — en particulier ceux qui motivent les modèles ARCH/GARCH du chapitre 3
-
-::: {.notes}
-**Ouverture.** C'est le chapitre d'entrée du cours : peu de résultats
-nouveaux en soi, mais tout le vocabulaire et les faits empiriques que le
-chapitre 3 va formaliser (variance conditionnelle, effet ARCH) sont
-posés ici. Ne pas passer trop de temps sur la section 2
-(échantillon/DGP/modèle paramétrique) — c'est un rappel d'économétrie
-générale, pas spécifique à la finance.
-
-La partie applicative (import de données, calcul de rendements,
-statistiques descriptives, tests de normalité) est entièrement dans
-`03-TP/TP1-donnees-faits-stylises.qmd`.
-:::
 
 ------------------------------------------------------------------------
 
@@ -84,13 +74,6 @@ le DGP (paramètres inconnus) à partir d'une seule réalisation observée.
 
 Population (paramètres inconnus) $\to$ Échantillon $\to$ Statistique
 d'échantillon (estimateur) $\to$ **Inférence**.
-
-::: {.notes}
-Trois types de données rencontrées en économétrie : coupe transversale
-(pas de dimension temporelle), séries temporelles (une entité, plusieurs
-dates, l'ordre compte), panel (plusieurs entités × plusieurs dates). Ce
-cours ne travaille qu'avec des séries temporelles.
-:::
 
 ------------------------------------------------------------------------
 
@@ -299,13 +282,6 @@ $$\sqrt T(\widehat\mu_T-\mu)\overset{d}{\to}\mathcal N(0,\sigma^2), \qquad
 \sqrt T(\widehat S_T-0)\overset{d}{\to}\mathcal N(0,6), \qquad
 \sqrt T(\widehat K_T-3)\overset{d}{\to}\mathcal N(0,24)$$
 
-::: {.notes}
-Ces trois résultats asymptotiques sont la brique de base des tests de
-normalité (kurtosis, asymétrie, Jarque-Bera) qui reviennent dans les
-faits stylisés 3, 4 et 6 juste après, puis dans le test d'Engle au
-chapitre 3.
-:::
-
 ------------------------------------------------------------------------
 
 ## Mesures robustes de dispersion
@@ -338,13 +314,6 @@ l'écart-type sensible aux quelques observations extrêmes.
 
 *Fan, J. et Yao, Q. (2015), The Elements of Financial Econometrics.*
 *Cont, R. (2001), Empirical Properties of Asset Returns, Quantitative Finance.*
-
-::: {.notes}
-Illustration filée sur un exemple unique (indice, rendements
-journaliers) en TP — voir `03-TP/TP1-donnees-faits-stylises.qmd`. Ici,
-on ne montre aucun graphique ni code : chaque fait est énoncé et, quand
-c'est pertinent, accompagné d'un test formel.
-:::
 
 ------------------------------------------------------------------------
 
@@ -402,11 +371,6 @@ $$Q_K = T(T+2)\sum_{k=1}^K\frac{\widehat\rho_k^2}{T-k} \overset{H_0}{\sim}\chi^2
 Règle de décision usuelle : rejet de $H_0$ si $Q > $ quantile
 $\chi^2(K)$ à $95\%$, ou p-valeur $<5\%$.
 
-::: {.notes}
-Le test Q de Ljung-Box réapparaît en fait stylisé 7, appliqué cette fois
-aux rendements **au carré** — c'est là qu'il devient discriminant.
-:::
-
 ------------------------------------------------------------------------
 
 ## Fait 3 : Queues épaisses
@@ -455,13 +419,6 @@ périodes agitées.
 Ce clustering est la manifestation visuelle directe de l'**autocorrélation
 des rendements au carré** (fait stylisé 7). C'est *l'observation*
 empirique que les modèles ARCH/GARCH du chapitre 3 formalisent.
-:::
-
-::: {.notes}
-C'est le moment de faire le lien explicite en séance avec l'exemple AR(1)
-à variance constante qui ouvre le chapitre 3 : rendement journalier
-« plat » en apparence mais rendement au carré très structuré dans le
-temps.
 :::
 
 ------------------------------------------------------------------------
@@ -514,13 +471,6 @@ leur propre volatilité.
 - Asymétrie de l'effet : la hausse de volatilité suite à une baisse de
   prix est typiquement plus forte que la baisse de volatilité suite à
   une hausse de même ampleur.
-
-::: {.notes}
-**Clôture — 5 min.** L'effet de levier est le fait stylisé qui motive
-directement les modèles **asymétriques** (EGARCH, GJR-GARCH) du chapitre
-3 : leur *News Impact Curve* est construite précisément pour capter
-cette asymétrie de réponse de la volatilité au signe du choc.
-:::
 
 ------------------------------------------------------------------------
 

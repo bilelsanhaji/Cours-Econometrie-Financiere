@@ -112,9 +112,3 @@ Recommencez les exercices 3 et 4 sur un autre actif de votre choix
 (action, indice, crypto-actif, devise). Le modèle retenu est-il le même
 que pour le CAC40 ? Le signe et l'ampleur de l'asymétrie sont-ils
 comparables ?
-
-::: {.notes}
-Cet exercice est celui à réutiliser directement pour la partie
-« GARCH univarié » du projet — même démarche, sur les actifs du
-portefeuille choisi.
-:::

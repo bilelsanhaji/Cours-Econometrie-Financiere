@@ -113,8 +113,3 @@ Recommencez les exercices 3 à 5 sur un autre actif de votre choix
 (action, autre indice, crypto-actif). Les faits stylisés observés
 sont-ils aussi marqués ? Gardez ce code : il servira de point de départ
 pour la partie "faits stylisés" de votre projet.
-
-::: {.notes}
-Cet exercice prépare directement l'étape préliminaire du projet — décrire
-les données avant de spécifier un modèle GARCH (TP3).
-:::

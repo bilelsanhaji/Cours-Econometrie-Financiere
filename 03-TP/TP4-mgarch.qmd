@@ -104,10 +104,3 @@ une période commune d'au moins 5 ans.
     échantillon et testez la calibration par le test de Kupiec vu en
     cours (chapitre 4) et au TD4 (exercice 6). Comparez à ce que vous
     aviez trouvé au TP3 pour un actif unique.
-
-::: {.notes}
-Cet exercice conclut la partie "modélisation" du projet : moyenne
-(ARMA, chapitre 2) $\to$ variance univariée (GARCH, chapitre 3)
-$\to$ covariance/corrélation multivariée (DCC, ce chapitre) sur le
-portefeuille retenu, jusqu'au backtesting de la VaR qui boucle le cours.
-:::

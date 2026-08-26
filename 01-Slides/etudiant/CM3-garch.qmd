@@ -7,6 +7,9 @@ format:
     footer: "Économétrie Financière — Chapitre 3"
 ---
 
+<!-- Fichier engendré : toute modification ici serait écrasée. -->
+
+
 ```{r}
 #| label: setup
 #| include: false
@@ -31,17 +34,6 @@ knitr::opts_chunk$set(
 - Interpréter les résultats
 - Comparer les modèles asymétriques
 
-::: {.notes}
-**Ouverture.** Ce chapitre est le cœur du cours — sur les deux formats,
-c'est celui qui reçoit le plus de temps. Voir `06-Enseignant/deroule-*.qmd`
-pour le découpage en séances propre à chaque site.
-
-La partie applicative (import de données, spécification `rugarch`,
-comparaison de modèles, VaR, backtesting) est entièrement dans
-`03-TP/TP3-garch.qmd` — ce chapitre ne montre aucun code, volontairement :
-c'est en TP que les étudiants l'écrivent eux-mêmes.
-:::
-
 ------------------------------------------------------------------------
 
 # Introduction
@@ -54,12 +46,6 @@ d'une certaine information.
 
 Avant 1982, la variance était **constante** dans tous les modèles
 économétriques.
-
-::: {.notes}
-**5 min.** C'est le moment de reprendre l'image d'ouverture du chapitre 1 :
-rendement plat, rendement au carré structuré. Ce chapitre formalise
-pourquoi.
-:::
 
 ------------------------------------------------------------------------
 
@@ -470,15 +456,6 @@ $\varphi_1$ mesure la force de l'asymétrie ; $\varphi_1 > 0$ traduit
 l'effet de levier usuel (un choc négatif accroît davantage la volatilité
 qu'un choc positif de même ampleur).
 
-::: {.notes}
-**Point de vigilance.** La version précédente de ce chapitre (source
-Créteil, `EF_CH3.Rmd`) inversait les deux cas de la NIC par rapport à la
-définition de $D_{t-1}$ donnée juste au-dessus — incohérence
-mathématique, corrigée ici. À vérifier une fois contre Glosten,
-Jagannathan et Runkle (1993) si vous voulez une deuxième source avant de
-projeter cette slide.
-:::
-
 ------------------------------------------------------------------------
 
 ### LST GARCH
@@ -488,13 +465,6 @@ $$h_t = \gamma + \big[\alpha_1+\alpha_2 F(\varepsilon_{t-1})\big]\varepsilon_{t-
 
 - $\theta$ petit ($\simeq 0{,}5$) : transition lente entre régimes.
 - $\theta$ grand ($\simeq 200$) : quasi changement de régime à seuil.
-
-::: {.notes}
-**Bilan de la section — 5 min.** Ne pas chercher l'exhaustivité en
-séance : TARCH/QARCH/NARCH/LST sont là pour montrer la diversité de la
-famille, mais EGARCH et GJR sont les deux modèles réellement travaillés
-en TP (`03-TP/TP3-garch.qmd`) et attendus au projet/examen.
-:::
 
 ------------------------------------------------------------------------
 
@@ -548,12 +518,6 @@ $$\widehat\theta_T \to \theta_0, \qquad \sqrt{T}(\widehat\theta_T-\theta_0) \ove
 - Après estimation : tests de diagnostic sur les résidus standardisés
   (autocorrélation, normalité, effet ARCH résiduel).
 
-::: {.notes}
-Ce triptyque de diagnostics (autocorrélation / normalité / ARCH
-résiduel) est exactement celui appliqué en TP après chaque estimation —
-le mentionner ici évite qu'il paraisse ad hoc plus tard.
-:::
-
 ------------------------------------------------------------------------
 
 # Leptokurticité des séries financières
@@ -602,13 +566,6 @@ En pratique (`rugarch`), c'est souvent la distribution de Student
 (`"std"`) ou de Student asymétrique (`"sstd"`) qui absorbe l'essentiel
 de la leptokurticité résiduelle laissée par une spécification normale —
 voir le TP.
-:::
-
-::: {.notes}
-**Clôture — 5 min.** Résumer la procédure en trois temps (ARMA →
-hétéroscédasticité → GARCH → leptokurticité résiduelle → distribution
-alternative) : c'est la démarche complète attendue au projet, et le fil
-que le TP fait dérouler sur données réelles.
 :::
 
 ------------------------------------------------------------------------

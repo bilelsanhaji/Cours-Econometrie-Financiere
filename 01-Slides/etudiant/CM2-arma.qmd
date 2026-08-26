@@ -7,6 +7,9 @@ format:
     footer: "Économétrie Financière — Chapitre 2"
 ---
 
+<!-- Fichier engendré : toute modification ici serait écrasée. -->
+
+
 ```{r}
 #| label: setup
 #| include: false
@@ -29,17 +32,6 @@ knitr::opts_chunk$set(
 - Construire et caractériser (moments, ACF, PACF) les processus AR, MA et ARMA
 - Estimer un ARMA, sélectionner son ordre, valider sa spécification
 - Reconnaître les limites du modèle ARMA — la variance conditionnelle constante — qui motivent le chapitre 3
-
-::: {.notes}
-**Ouverture.** Ce chapitre modélise la **moyenne** conditionnelle des
-rendements. Le chapitre 3 modélisera leur **variance** conditionnelle —
-faire le lien explicitement : un ARMA suppose $\mathbb V_t(\varepsilon_{t+1})$
-constante, exactement l'hypothèse que le chapitre 3 va lever.
-
-La partie applicative (import de données, identification, estimation,
-diagnostic sous `R`) est entièrement dans
-`03-TP/TP2-arma.qmd` — ce chapitre ne montre aucun code.
-:::
 
 ------------------------------------------------------------------------
 
@@ -242,12 +234,6 @@ Racines complexes (comportement pseudo-cyclique) si $\varphi_1^2+4\varphi_2<0$.
 **Équations de Yule-Walker** :
 $$\rho(1) = \varphi_1+\varphi_2\rho(1), \qquad \rho(2) = \varphi_1\rho(1)+\varphi_2$$
 
-::: {.notes}
-Le triangle de stationnarité dans le plan $(\varphi_1,\varphi_2)$ se
-prête bien à un dessin au tableau — utile pour visualiser la frontière
-racines réelles / racines complexes.
-:::
-
 ------------------------------------------------------------------------
 
 ## AR($p$) et équations de Yule-Walker générales
@@ -369,15 +355,6 @@ $$y_{1,t} = \alpha_{11}y_{1,t-1} + \alpha_{12}y_{2,t-1} + \varepsilon_{1t}$$
 Si $\alpha_{12}\neq0$, $y_{2,t-1}$ « cause » (au sens de Granger)
 $y_{1,t}$.
 
-::: {.notes}
-Le VARMA multivarié n'est pas développé davantage dans ce cours : la
-généralisation matricielle des conditions de stationnarité/inversibilité
-suit le même principe qu'en univarié, mais la charge de calcul dépasse
-le cadre des deux formats. Le chapitre 4 (GARCH multivarié) reprend
-cette même logique d'extension matricielle pour la **variance**
-conditionnelle plutôt que pour la moyenne.
-:::
-
 ------------------------------------------------------------------------
 
 # Estimation
@@ -443,13 +420,6 @@ $H_0$ : $\mathbb V(\varepsilon_t\mid Y_{t-1})$ ne dépend pas de $Y_{t-1}$.
 2. Régression auxiliaire : $\widehat\varepsilon_t^2 = \beta_1+\beta_2y_{t-1}+\beta_3y_{t-1}^2+\eta_t \to R^2_{het}$
 3. $TR^2_{het} \overset{H_0}{\sim} \chi^2_2$
 
-::: {.notes}
-Ce test de White est le prédécesseur direct, en esprit, du test d'Engle
-(1982) présenté au chapitre 3 : même logique de régression auxiliaire
-sur les résidus au carré, mais spécifiée cette fois sur les retards des
-résidus eux-mêmes plutôt que sur $y_{t-1}$.
-:::
-
 ------------------------------------------------------------------------
 
 ## Forme fonctionnelle : test RESET de Ramsey (1969)
@@ -486,15 +456,6 @@ $H_0: \mathbb V(\varepsilon_t\mid\varepsilon_{t-1})$ constante.
 2. Régression auxiliaire : $\widehat\varepsilon_t^2=\beta_1+\beta_2\widehat\varepsilon_{t-1}^2+\eta_t \to R^2_{arch}$
 3. $TR^2_{arch} \overset{H_0}{\sim} \chi^2_m$
 
-::: {.notes}
-**Charnière vers le chapitre 3.** Ce test est présenté ici en anticipant
-sa forme générale ; il sera détaillé et pratiqué (procédure en 3 étapes,
-ordre $q$, statistique exacte) au chapitre 3. Sur des rendements
-financiers, ce test est presque toujours rejeté **après** un ARMA —
-c'est précisément ce résidu hétéroscédastique que le chapitre 3 va
-modéliser.
-:::
-
 ------------------------------------------------------------------------
 
 # Application : persistance et mauvaise spécification
@@ -513,13 +474,6 @@ pas un modèle correctement spécifié : les tests de diagnostic
 (normalité, hétéroscédasticité, autocorrélation résiduelle) doivent
 systématiquement être menés après l'estimation, jamais seulement la
 significativité des coefficients.
-:::
-
-::: {.notes}
-**Clôture.** Un ARMA mal spécifié suggère souvent d'ajouter des
-covariables (modèles dynamiques multivariés, VAR) — ou, si le problème
-vient de la **variance** plutôt que de la moyenne, de passer aux
-modèles ARCH/GARCH du chapitre 3.
 :::
 
 ------------------------------------------------------------------------
