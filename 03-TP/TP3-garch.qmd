@@ -12,10 +12,13 @@ le projet — la démarche est identique, sur votre propre actif.*
 
 # Avant de commencer
 
-**Langage.** `R`. Le corrigé est dans `03-TP/corriges/TP3-garch-R-corrige.qmd`.
+**Langage.** `R` ou `Python`, au choix. Les fonctions équivalentes sont dans
+`03-TP/correspondance-R-python.md`. Les corrigés existent dans les deux
+langages, déposés après la séance.
 
-**Package clé.** `rugarch`, pour la spécification et l'estimation des
-modèles GARCH (`ugarchspec`, `ugarchfit`, `ugarchforecast`).
+**Package clé.** `R` : `rugarch`, pour la spécification et l'estimation des
+modèles GARCH (`ugarchspec`, `ugarchfit`, `ugarchforecast`). `Python` :
+`arch` (`arch_model`), qui spécifie et estime en un seul appel.
 
 **Données.** Indice CAC40 (`^FCHI`), rendements journaliers en log, en %,
 sur une période récente (2018–2023 par exemple). Vous pouvez utiliser

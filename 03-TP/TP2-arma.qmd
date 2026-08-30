@@ -12,12 +12,17 @@ obtenus ici serviront de point de départ pour le chapitre 3 (TP3).*
 
 # Avant de commencer
 
-**Langage.** `R`. Le corrigé est dans
-`03-TP/corriges/TP2-arma-R-corrige.qmd`.
+**Langage.** `R` ou `Python`, au choix. Les fonctions équivalentes sont dans
+`03-TP/correspondance-R-python.md`. Les corrigés existent dans les deux
+langages, déposés après la séance.
 
-**Packages clés.** `forecast` (`auto.arima`, `checkresiduals`), `tseries`
-(`adf.test`, `kpss.test`, `Box.test`, `jarque.bera.test`), `lmtest`
-(`bptest`, `coeftest`), `FinTS` (`ArchTest`).
+**Packages clés.** `R` : `forecast` (`auto.arima`, `checkresiduals`),
+`tseries` (`adf.test`, `kpss.test`, `Box.test`, `jarque.bera.test`),
+`lmtest` (`bptest`, `coeftest`), `FinTS` (`ArchTest`). `Python` :
+`statsmodels` (`ARIMA`, `acorr_ljungbox`, `jarque_bera`, `het_arch`,
+`het_white`). Pas d'équivalent direct fiable à `auto.arima` : le corrigé
+reconstruit la sélection par AIC à la main (voir
+`03-TP/correspondance-R-python.md`).
 
 **Données.** Rendements journaliers d'une action ou d'un indice de votre
 choix (par exemple AAPL, 2018–2020, autour de la crise Covid).

@@ -13,12 +13,15 @@ du chapitre 3 (TP3).*
 
 # Avant de commencer
 
-**Langage.** `R`. Le corrigé est dans
-`03-TP/corriges/TP1-donnees-faits-stylises-R-corrige.qmd`.
+**Langage.** `R` ou `Python`, au choix. Les fonctions équivalentes sont dans
+`03-TP/correspondance-R-python.md`. Les corrigés existent dans les deux
+langages, déposés après la séance.
 
-**Package clé.** `quantmod`, pour l'import des données (`getSymbols`,
+**Package clé.** `R` : `quantmod`, pour l'import des données (`getSymbols`,
 `dailyReturn`) ; `moments` pour skewness/kurtosis ; `tseries` pour le
-test de Jarque-Bera.
+test de Jarque-Bera. `Python` : `yfinance` pour l'import ; `scipy.stats`
+pour skewness/kurtosis ; `statsmodels.stats.stattools.jarque_bera` pour le
+test de normalité.
 
 **Données.** Indice CAC40 (`^FCHI`) ou toute autre action/indice de
 votre choix, prix de clôture ajustés, sur au moins 5 ans d'historique

@@ -51,7 +51,7 @@ découpage figé. Le syllabus, lui, diffère réellement d'un site à l'autre
 | `00-Syllabus/etudiant/` | Présentation générale, par site : plan, objectifs, évaluation |
 | `01-Slides/etudiant/` | Les quatre chapitres du cours, en HTML |
 | `02-TD/` | Les fiches de travaux dirigés — exercices sur papier |
-| `03-TP/` | Les fiches de travaux sur machine (`R`) |
+| `03-TP/` | Les fiches de travaux sur machine (`R` ou `Python`, au choix) |
 | `04-Data/` | Séries utilisées en TD et en TP |
 | `05-Eval/` | Sujets d'examen des années passées, le cas échéant |
 
@@ -83,9 +83,13 @@ l'affaire — mais il faudra le refaire à chaque mise à jour.
 
 ## Installation
 
-`R` ≥ 4.2, avec au minimum les packages `quantmod`, `tidyverse`, `rugarch`,
-`rmgarch`, `FinTS`, `moments`, `tseries`, `forecast`, `ggplot2`,
-`gridExtra`, `reshape2`, `knitr`. Voir `install-packages.R`.
+Les travaux sur machine (`03-TP/`) se font au choix en `R` ou en `Python` —
+voir `03-TP/README.md` et `03-TP/correspondance-R-python.md`.
+
+| | À installer | Paquets |
+|---|---|---|
+| `R` | `R` ≥ 4.2 | `source("install-packages.R")` (`quantmod`, `tidyverse`, `rugarch`, `rmgarch`, `FinTS`, `moments`, `tseries`, `forecast`, `ggplot2`, `gridExtra`, `reshape2`, `knitr`) |
+| `Python` | `Python` ≥ 3.10 | `pip install -r 03-TP/environnements/requirements.txt` (`arch`, `statsmodels`, `yfinance`, `pmdarima`...) |
 
 Pour compiler les fiches en PDF, une distribution LaTeX est nécessaire :
 `install.packages("tinytex"); tinytex::install_tinytex()`.

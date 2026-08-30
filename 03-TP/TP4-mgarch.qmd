@@ -13,11 +13,16 @@ directement les acquis du TP3 (spécification GARCH univariée). Dernière
 
 # Avant de commencer
 
-**Langage.** `R`. Le corrigé est dans
-`03-TP/corriges/TP4-mgarch-R-corrige.qmd`.
+**Langage.** `R` ou `Python`, au choix. Les fonctions équivalentes sont dans
+`03-TP/correspondance-R-python.md`. Les corrigés existent dans les deux
+langages, déposés après la séance.
 
-**Packages clés.** `rmgarch` (`dccspec`, `dccfit`, `dccforecast`),
-`rugarch` (spécifications univariées en entrée du DCC).
+**Packages clés.** `R` : `rmgarch` (`dccspec`, `dccfit`, `dccforecast`),
+`rugarch` (spécifications univariées en entrée du DCC). `Python` : il
+n'existe pas d'équivalent mûr à `rmgarch` — le corrigé utilise `arch` pour
+l'étape 1 (GARCH univariés) et un petit module maison,
+`03-TP/dcc.py`, qui réestime la procédure en deux étapes du cours pour
+l'étape 2 (DCC).
 
 **Données.** Rendements journaliers de 3 à 4 actifs (par exemple :
 CAC40, DAX, S&P500, ou un panier d'actions de secteurs différents), sur
