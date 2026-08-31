@@ -37,7 +37,7 @@ temporelles : modéliser la **moyenne conditionnelle** des rendements
 
 ::: {.definition}
 **Fil conducteur** : un rendement financier n'est presque jamais
-autocorrélé, mais son carré l'est presque toujours. C'est ce écart entre
+autocorrélé, mais son carré l'est presque toujours. C'est cet écart entre
 moyenne et variance qui justifie tout le programme.
 :::
 
