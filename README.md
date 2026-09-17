@@ -79,6 +79,15 @@ git pull
 Sans `git`, le bouton **Code → Download ZIP** de la page GitHub fait
 l'affaire — mais il faudra le refaire à chaque mise à jour.
 
+Une règle à retenir : **n'écrivez jamais dans les fichiers du dépôt**, sinon
+`git pull` se bloquera. Créez un dossier `mon-travail/` et travaillez sur
+des copies — `git` n'y touchera jamais.
+
+`MISES-A-JOUR.md` détaille la procédure complète : cloner depuis RStudio ou
+GitHub Desktop plutôt que le terminal, se débloquer quand `git pull` refuse
+d'avancer, être prévenu des nouveaux dépôts. Et pourquoi *forker* le dépôt
+n'est pas ce qu'il vous faut.
+
 ---
 
 ## Installation
