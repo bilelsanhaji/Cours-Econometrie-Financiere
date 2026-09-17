@@ -1,9 +1,0 @@
-# Profil « tableau blanc » : annotation en direct sur les slides en séance.
-# Usage : quarto render 01-Slides/CM3-garch.qmd --profile tableau
-# Produit un HTML + un dossier `*_files/` : NE PAS distribuer, garder pour
-# votre usage en salle (voir 01-Slides/README.md).
-
-format:
-  revealjs:
-    chalkboard: true
-    embed-resources: false

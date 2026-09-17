@@ -1,7 +1,6 @@
 ---
 title: "Chapitre 0 — Présentation générale"
 subtitle: "Économétrie Financière · M2 MBFA · Université Paris 8"
-# Configuration commune (thème, tableau blanc, découpage) : _quarto.yml à la racine
 format:
   revealjs:
     footer: "Économétrie Financière — Paris 8 — Chapitre 0"

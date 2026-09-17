@@ -46,6 +46,24 @@
 *.command
 01-Slides/generer-version-etudiant.R
 
+# Outillage de fabrication du cours : mémo des commandes de rendu et
+# configuration Quarto (thème, découpage des slides, profil tableau, liste
+# des fichiers à rendre). Rien de tout cela ne sert à un étudiant : il
+# reçoit le HTML et les PDF déjà produits, et les fiches de TD et de TP
+# portent leur propre `format: pdf` — elles se rendent sans `_quarto.yml`.
+#
+# Ces trois fichiers ayant été publiés par le passé, les ignorer ne suffisait
+# pas : ils ont été retirés du suivi par `git rm --cached`, ce qui les efface
+# de GitHub tout en les conservant sur cette machine.
+MEMO-TERMINAL.md
+_quarto.yml
+_quarto-tableau.yml
+
+# Le thème des slides n'est lu que par `_quarto.yml`. Celui-ci n'étant plus
+# publié, le fichier n'aurait plus rien à styler côté étudiant : il part avec.
+# Retiré du suivi par `git rm --cached`, comme les trois précédents.
+theme.scss
+
 # =====================================================================
 #  Artefacts de compilation
 # =====================================================================
