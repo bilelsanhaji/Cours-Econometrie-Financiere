@@ -1,0 +1,6 @@
+{
+  "quarto.render.previewType": "external",
+  "files.associations": {
+    "*.qmd": "quarto"
+  }
+}

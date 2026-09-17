@@ -33,6 +33,19 @@ journalier.
 
 (a) Téléchargez les prix de clôture ajustés de votre actif
     (`quantmod::getSymbols`) sur les 5 dernières années.
+
+```{r}
+library(quantmod)
+```
+
+```{r}
+#| label: donnees
+NVDA <- getSymbols("NVDA", from = "2018-01-01", to = "2023-12-31",
+                    src = "yahoo", auto.assign = FALSE)
+NVDA <- Cl(NVDA)  # prix de clôture ajustés
+plot(NVDA) 
+```
+
 (b) Calculez le rendement simple et le log-rendement journaliers
     (`quantmod::dailyReturn`, arguments `type = "arithmetic"` et
     `type = "log"`). Tracez les deux séries sur le même graphique : sont

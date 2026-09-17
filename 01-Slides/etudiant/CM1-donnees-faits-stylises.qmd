@@ -340,6 +340,21 @@ covariance) des séries modélisées.
 
 ------------------------------------------------------------------------
 
+```{r}
+library(datasets)
+plot(EuStockMarkets[,'CAC'])
+```
+
+------------------------------------------------------------------------
+
+```{r}
+CAC.P = EuStockMarkets[,'CAC']
+CAC.R = diff(log(CAC.P))*100
+plot(cbind(CAC.P,CAC.R))
+```
+
+------------------------------------------------------------------------
+
 ## Fait 2 : Absence d'autocorrélation
 
 Les autocorrélations des rendements $R_t$ sont en général non
@@ -358,6 +373,15 @@ $$\rho_k = \mathrm{Corr}(R_t,R_{t-k}) = \frac{\gamma_k}{\sigma^2}, \qquad
 
 ------------------------------------------------------------------------
 
+```{r}
+library(tseries)
+library(stats)
+acf(CAC.P)
+acf(CAC.R)
+```
+
+------------------------------------------------------------------------
+
 ### Tests Q : Box-Pierce et Ljung-Box
 
 $H_0: \rho_1=\dots=\rho_K=0$ contre $H_1: \exists j,\ \rho_j\ne0$.
@@ -369,8 +393,16 @@ $H_0: \rho_1=\dots=\rho_K=0$ contre $H_1: \exists j,\ \rho_j\ne0$.
 $$Q_K = T(T+2)\sum_{k=1}^K\frac{\widehat\rho_k^2}{T-k} \overset{H_0}{\sim}\chi^2(K)$$
 :::
 
-Règle de décision usuelle : rejet de $H_0$ si $Q > $ quantile
+Règle de décision usuelle : rejet de $H_0$ si $Q >$ quantile
 $\chi^2(K)$ à $95\%$, ou p-valeur $<5\%$.
+
+------------------------------------------------------------------------
+
+```{r}
+#?Box.test()
+Box.test(CAC.P)
+Box.test(CAC.R)
+```
 
 ------------------------------------------------------------------------
 
@@ -391,6 +423,23 @@ Tester $H_0$ au seuil $5\%$ (valeur critique $\Phi^{-1}(0{,}95)=1{,}645$).
 $H_0$ $\Rightarrow$ distribution leptokurtique — cas quasi systématique
 sur données financières journalières.)*
 :::
+
+------------------------------------------------------------------------
+
+```{r}
+#?hist
+hist(CAC.R, freq = F, ylim = c(0, 0.5))
+lines(density(CAC.R),col=2)
+lines(density(rnorm(1890)),col='darkgreen')
+```
+
+```{r}
+#install.packages("DistributionUtils")
+#?kurtosis
+library(DistributionUtils)
+kurtosis(CAC.R)
+skewness(CAC.R)
+```
 
 ------------------------------------------------------------------------
 
@@ -421,6 +470,11 @@ Ce clustering est la manifestation visuelle directe de l'**autocorrélation
 des rendements au carré** (fait stylisé 7). C'est *l'observation*
 empirique que les modèles ARCH/GARCH du chapitre 3 formalisent.
 :::
+
+```{r}
+plot(CAC.R^2, col = "blue", main = "Clustering de la volatilité",
+     ylab = "Rendements au carré", xlab = "Temps")
+```
 
 ------------------------------------------------------------------------
 
